@@ -781,12 +781,16 @@ def warning_beep_html():
 # ============================================================
 def get_data():
     try:
-        rSTMonse = requests.get(
-            f"http://{STM32_IP}/data",
+        endpoint = STM32_IP.strip()
+        if not endpoint.startswith("http://") and not endpoint.startswith("https://"):
+            endpoint = f"http://{endpoint}"
+        url = f"{endpoint.rstrip('/')}/data"
+        response = requests.get(
+            url,
             timeout=2
         )
-        rSTMonse.raise_for_status()
-        d = rSTMonse.json()
+        response.raise_for_status()
+        d = response.json()
         return (
             float(d.get("flow", 0)),
             float(d.get("temperature", 0)),
