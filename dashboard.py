@@ -28,7 +28,7 @@ st.set_page_config(
 # ============================================================
 # DEFAULT CONFIGURATION
 # ============================================================
-STM32_IP = "192.168.137.113"
+STM32_IP = "192.168.137.128"
 
 # Prototype threshold ranges - calibrate experimentally.
 TEMP_LOW = 30.0
