@@ -28,7 +28,10 @@ st.set_page_config(
 # ============================================================
 # DEFAULT CONFIGURATION
 # ============================================================
-STM32_IP = "192.168.137.128"
+
+# ThingSpeak channel settings (filled in via sidebar)
+TS_CHANNEL_ID   = "3500246"          # e.g. "2987654"
+TS_READ_API_KEY = "LLO7RGQGBV9G9J8N"          # Read API Key from ThingSpeak
 
 # Prototype threshold ranges - calibrate experimentally.
 TEMP_LOW = 30.0
@@ -410,7 +413,11 @@ MENTOR: N INDHU &nbsp; | &nbsp; RUJITH RS • SANJUSRINITHA T • RHOGETHRAM S T
 # ============================================================
 st.sidebar.header("⚙️ SYSTEM CONFIGURATION")
 
-STM32_IP = st.sidebar.text_input("STM32 IP Address", value=STM32_IP)
+# ---- ThingSpeak Cloud Source ----
+st.sidebar.subheader("☁️ ThingSpeak Cloud")
+TS_CHANNEL_ID   = st.sidebar.text_input("Channel ID",    value=TS_CHANNEL_ID,   placeholder="e.g. 2987654")
+TS_READ_API_KEY = st.sidebar.text_input("Read API Key",  value=TS_READ_API_KEY, placeholder="Paste Read API Key", type="password")
+st.sidebar.caption("[Get keys → ThingSpeak → My Channels → API Keys](https://thingspeak.com/channels)")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🌡️ Temperature Range")
@@ -777,26 +784,35 @@ def warning_beep_html():
     """
 
 # ============================================================
-# STM32 DATA
+# ESP32 DATA  —  reads from ThingSpeak cloud
+# ThingSpeak field mapping:
+#   field1 = flow (L/min)
+#   field2 = temperature (°C)
+#   field3 = totalLiters (L)
 # ============================================================
 def get_data():
+    """Fetch latest sensor values from ThingSpeak."""
+    cid  = TS_CHANNEL_ID.strip()
+    rkey = TS_READ_API_KEY.strip()
+
+    if not cid or not rkey:
+        # Credentials not yet configured
+        return 0.0, 0.0, 0.0, False
+
     try:
-        endpoint = STM32_IP.strip()
-        if not endpoint.startswith("http://") and not endpoint.startswith("https://"):
-            endpoint = f"http://{endpoint}"
-        url = f"{endpoint.rstrip('/')}/data"
-        response = requests.get(
-            url,
-            timeout=2
+        url = (
+            f"https://api.thingspeak.com/channels/{cid}/feeds/last.json"
+            f"?api_key={rkey}"
         )
+        response = requests.get(url, timeout=5)
         response.raise_for_status()
         d = response.json()
-        return (
-            float(d.get("flow", 0)),
-            float(d.get("temperature", 0)),
-            float(d.get("totalLiters", 0)),
-            True
-        )
+        if not isinstance(d, dict):
+            return 0.0, 0.0, 0.0, False
+        flow_val  = float(d.get("field1") or 0)
+        temp_val  = float(d.get("field2") or 0)
+        total_val = float(d.get("field3") or 0)
+        return flow_val, temp_val, total_val, True
     except Exception:
         return 0.0, 0.0, 0.0, False
 
