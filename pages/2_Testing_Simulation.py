@@ -629,7 +629,7 @@ st.markdown(r"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap');
 .stApp {background:radial-gradient(circle at 50% 0%,rgba(0,190,255,.10),transparent 30%),linear-gradient(135deg,#02060c 0%,#06111b 52%,#02050a 100%);color:#eaf8ff;}
-header {visibility:hidden;} footer {visibility:hidden;} #MainMenu {visibility:hidden;}
+[data-testid="stToolbar"] {visibility:hidden !important;} footer {visibility:hidden !important;} #MainMenu {visibility:hidden !important;} header[data-testid="stHeader"] {background:transparent !important;}
 .block-container {max-width:1700px;padding:14px 2rem 30px 2rem;} * {font-family:'Inter',sans-serif;}
 h1,h2,h3,h4 {font-family:'Orbitron',sans-serif !important;}
 .topbar {display:flex;align-items:center;justify-content:space-between;padding:13px 18px;margin-bottom:14px;border:1px solid rgba(75,220,255,.18);border-radius:12px;background:rgba(3,12,21,.92);}
@@ -643,6 +643,16 @@ h1,h2,h3,h4 {font-family:'Orbitron',sans-serif !important;}
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="topbar"><div class="brand">BOILER <span>AI</span> • TESTING / SIMULATION</div><div>🧪 <b>OFFLINE TEST MODE</b></div></div>', unsafe_allow_html=True)
+
+# ============================================================
+# PAGE NAVIGATION BAR (MAIN SCREEN)
+# ============================================================
+nav_c1, nav_c2 = st.columns([1, 1])
+with nav_c1:
+    st.page_link("dashboard.py", label="🏭 ➜ Return to Live Monitoring Dashboard", icon="🏭")
+with nav_c2:
+    st.page_link("pages/2_Testing_Simulation.py", label="🧪 Testing / Simulation Mode (Active)", icon="🧪", disabled=True)
+
 
 # ============================================================
 # STATE INITIALIZATION

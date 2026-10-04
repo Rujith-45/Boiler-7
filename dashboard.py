@@ -79,9 +79,10 @@ st.markdown(r"""
     color: #eaf8ff;
 }
 
-header {visibility:hidden;}
-footer {visibility:hidden;}
-#MainMenu {visibility:hidden;}
+[data-testid="stToolbar"] {visibility:hidden !important;}
+footer {visibility:hidden !important;}
+#MainMenu {visibility:hidden !important;}
+header[data-testid="stHeader"] {background: transparent !important;}
 
 .block-container {
     max-width: 1700px;
@@ -1122,6 +1123,16 @@ st.markdown(f"""
     <div class="team-line">MENTOR: <b>N INDHU</b> &nbsp; | &nbsp; MENTEES: <b>RUJITH RS</b> • <b>SANJUSRINITHA T</b> • <b>RHOGETHRAM S T</b></div>
 </div>
 """, unsafe_allow_html=True)
+
+# ============================================================
+# PAGE NAVIGATION BAR (MAIN SCREEN)
+# ============================================================
+nav_c1, nav_c2 = st.columns([1, 1])
+with nav_c1:
+    st.page_link("dashboard.py", label="🏭 Live Monitoring Dashboard (Active)", icon="🏭", disabled=True)
+with nav_c2:
+    st.page_link("pages/2_Testing_Simulation.py", label="🧪 Switch to Testing / Simulation Page ➜", icon="🧪")
+
 
 # ============================================================
 # MAIN PROCESS VISUALIZATION
