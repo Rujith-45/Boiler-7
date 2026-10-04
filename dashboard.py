@@ -68,6 +68,12 @@ if "thermography_video_name" not in st.session_state:
 if "theme_mode" not in st.session_state:
     st.session_state.theme_mode = "dark"
 
+def on_theme_change():
+    selected = st.session_state.get("global_theme_switcher")
+    if selected:
+        st.session_state.theme_mode = "light" if "Light" in selected else "dark"
+
+
 # ============================================================
 # PROFESSIONAL UI (DYNAMIC DARK & LIGHT SCADA THEMES)
 # ============================================================
@@ -94,9 +100,7 @@ footer {visibility:hidden !important;}
 #MainMenu {visibility:hidden !important;}
 header[data-testid="stHeader"] {background: transparent !important;}
 
-/* ============================================================
-   SCADA NAVIGATION BUTTONS (DARK)
-   ============================================================ */
+/* Navigation Links */
 div[data-testid="stPageLink"] {
     display: flex;
     justify-content: center;
@@ -278,6 +282,97 @@ h1,h2,h3,h4 {
     color:#edfaff;
 }
 
+.range-box {
+    padding:10px 13px;
+    border-radius:10px;
+    margin-top:9px;
+    background:rgba(9,24,37,.8);
+    border:1px solid rgba(100,190,220,.12);
+}
+
+.range-title {
+    color:#7894a5;
+    font-size:12px;
+}
+
+.range-value {
+    font-family:'Orbitron',sans-serif;
+    color:#eafaff;
+    font-size:16px;
+    font-weight:700;
+}
+
+.info-box {
+    padding:20px;
+    border-radius:14px;
+    border:1px solid rgba(75,220,255,.20);
+    background:rgba(5,24,35,.55);
+    color:#eaf8ff;
+}
+
+.bench-card {
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(75,220,255,.24);
+    background: linear-gradient(135deg, rgba(8,26,40,.96), rgba(4,14,24,.96));
+    margin-bottom: 14px;
+    color:#eaf8ff;
+}
+
+.action-box {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(3, 12, 21, 0.85);
+    border: 1px solid rgba(69, 231, 255, 0.3);
+}
+
+.action-box b {
+    color: #45e7ff;
+}
+
+.action-box span {
+    color: #eaf8ff;
+    font-size: 13.5px;
+}
+
+.footer {
+    text-align:center;
+    color:#587284;
+    margin-top:25px;
+    padding-top:18px;
+    border-top:1px solid rgba(100,160,180,.10);
+    font-size:12px;
+    letter-spacing:1px;
+}
+
+/* Theme Switcher Styling in Top-Right Corner (DARK) */
+div[data-testid="stSegmentedControl"] {
+    background: rgba(3, 12, 21, 0.94) !important;
+    border: 1.5px solid rgba(75, 220, 255, 0.35) !important;
+    border-radius: 12px !important;
+    padding: 3px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
+}
+
+div[data-testid="stSegmentedControl"] button {
+    border-radius: 9px !important;
+    color: #8faabb !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
+    background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
+    color: #45e7ff !important;
+    border: 1px solid rgba(69, 231, 255, 0.6) !important;
+    box-shadow: 0 0 15px rgba(69, 231, 255, 0.35) !important;
+}
+
+/* Boiler Graphic (DARK) */
 .boiler-area {
     min-height:385px;
     display:flex;
@@ -429,79 +524,6 @@ h1,h2,h3,h4 {
     font-size:28px;
     font-weight:800;
     color:#edfaff;
-}
-
-.range-box {
-    padding:10px 13px;
-    border-radius:10px;
-    margin-top:9px;
-    background:rgba(9,24,37,.8);
-    border:1px solid rgba(100,190,220,.12);
-}
-
-.range-title {
-    color:#7894a5;
-    font-size:12px;
-}
-
-.range-value {
-    font-family:'Orbitron',sans-serif;
-    color:#eafaff;
-    font-size:16px;
-    font-weight:700;
-}
-
-.info-box {
-    padding:20px;
-    border-radius:14px;
-    border:1px solid rgba(75,220,255,.20);
-    background:rgba(5,24,35,.55);
-    color:#eaf8ff;
-}
-
-.footer {
-    text-align:center;
-    color:#587284;
-    margin-top:25px;
-    padding-top:18px;
-    border-top:1px solid rgba(100,160,180,.10);
-    font-size:12px;
-    letter-spacing:1px;
-}
-
-.bench-card {
-    padding: 16px 20px;
-    border-radius: 14px;
-    border: 1px solid rgba(75,220,255,.24);
-    background: linear-gradient(135deg, rgba(8,26,40,.96), rgba(4,14,24,.96));
-    margin-bottom: 14px;
-    color:#eaf8ff;
-}
-
-/* Theme Switcher Styling in Top-Right Corner (DARK) */
-div[data-testid="stSegmentedControl"] {
-    background: rgba(3, 12, 21, 0.94) !important;
-    border: 1.5px solid rgba(75, 220, 255, 0.35) !important;
-    border-radius: 12px !important;
-    padding: 3px !important;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
-}
-
-div[data-testid="stSegmentedControl"] button {
-    border-radius: 9px !important;
-    color: #8faabb !important;
-    font-family: 'Orbitron', sans-serif !important;
-    font-weight: 700 !important;
-    font-size: 12px !important;
-    border: none !important;
-    background: transparent !important;
-}
-
-div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
-    background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
-    color: #45e7ff !important;
-    border: 1px solid rgba(69, 231, 255, 0.6) !important;
-    box-shadow: 0 0 15px rgba(69, 231, 255, 0.35) !important;
 }
 
 @keyframes fadein {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -765,6 +787,41 @@ h1,h2,h3,h4 {
     color:#0f172a !important;
 }
 
+.action-box {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    background: #f0f7fe !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.3) !important;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+}
+
+.action-box b {
+    color: #0284c7 !important;
+    font-weight: 700 !important;
+}
+
+.action-box span {
+    color: #0f172a !important;
+    font-size: 13.5px;
+    font-weight: 500 !important;
+}
+
+.fusion-item {
+    border-bottom: 1px solid rgba(2, 132, 199, 0.15) !important;
+    color: #0f172a !important;
+}
+
+.fusion-item span {
+    color: #475569 !important;
+    font-weight: 600 !important;
+}
+
+.fusion-item b {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
 /* Action / Preset Buttons in Light Mode */
 div.stButton > button {
     background: #ffffff !important;
@@ -821,13 +878,51 @@ div[data-baseweb="input"] input {
     color: #0f172a !important;
 }
 
-div[data-testid="stFileUploader"] {
-    background-color: #ffffff !important;
+/* File Uploader in Light Mode */
+div[data-testid="stFileUploader"],
+div[data-testid="stFileUploader"] section,
+div[data-testid="stFileUploader"] [data-testid="stFileUploadDropzone"],
+div[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"],
+div[data-testid="stFileUploaderDropzone"] {
+    background-color: #f8fafc !important;
+    background: #f8fafc !important;
     border: 1.5px dashed rgba(2, 132, 199, 0.45) !important;
     border-radius: 14px !important;
+    color: #0f172a !important;
 }
 
 div[data-testid="stFileUploader"] * {
+    color: #0f172a !important;
+}
+
+div[data-testid="stFileUploader"] button {
+    background: #ffffff !important;
+    color: #0284c7 !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.4) !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05) !important;
+    font-weight: 600 !important;
+}
+
+div[data-testid="stFileUploader"] button:hover {
+    background: #e0f2fe !important;
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+}
+
+div[data-testid="stFileUploader"] small,
+div[data-testid="stFileUploader"] span {
+    color: #64748b !important;
+}
+
+/* Alerts and Expanders */
+div[data-testid="stAlert"] {
+    background-color: #f0f7fe !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.25) !important;
+    border-radius: 12px !important;
+    color: #0f172a !important;
+}
+
+div[data-testid="stAlert"] * {
     color: #0f172a !important;
 }
 
@@ -1777,18 +1872,14 @@ with top_col1:
 
 with top_col2:
     cur_theme = st.session_state.get("theme_mode", "dark")
-    mode_selection = st.segmented_control(
+    st.segmented_control(
         "Theme Mode",
         options=["🌙 Dark", "☀️ Light"],
         default="🌙 Dark" if cur_theme == "dark" else "☀️ Light",
-        key=f"dash_theme_ctrl_{cur_theme}",
+        key="global_theme_switcher",
+        on_change=on_theme_change,
         label_visibility="collapsed"
     )
-    if mode_selection:
-        chosen = "light" if "Light" in mode_selection else "dark"
-        if chosen != cur_theme:
-            st.session_state.theme_mode = chosen
-            st.rerun()
 
 st.markdown(f"""
 <div class="hero">
