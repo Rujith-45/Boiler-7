@@ -84,6 +84,66 @@ footer {visibility:hidden !important;}
 #MainMenu {visibility:hidden !important;}
 header[data-testid="stHeader"] {background: transparent !important;}
 
+/* ============================================================
+   PROPER SCADA NAVIGATION BUTTONS
+   ============================================================ */
+div[data-testid="stPageLink"] {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+div[data-testid="stPageLink"] a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
+    border: 1.5px solid rgba(69, 231, 255, 0.45) !important;
+    color: #f0fbff !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), inset 0 0 15px rgba(69, 231, 255, 0.10) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+div[data-testid="stPageLink"] a:hover {
+    border-color: #45e7ff !important;
+    background: linear-gradient(135deg, #0d314d 0%, #071c2d 100%) !important;
+    box-shadow: 0 0 25px rgba(69, 231, 255, 0.55), inset 0 0 20px rgba(69, 231, 255, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+div[data-testid="stPageLink"] a p, 
+div[data-testid="stPageLink"] a span {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.2px !important;
+    color: #edfaff !important;
+    margin: 0 !important;
+}
+
+/* Active State for Current Page */
+div[data-testid="stPageLink"] a[aria-disabled="true"],
+div[data-testid="stPageLink"] a.disabled {
+    background: linear-gradient(135deg, rgba(8, 48, 35, 0.95) 0%, rgba(3, 24, 18, 0.95) 100%) !important;
+    border: 1.5px solid #55ffc0 !important;
+    box-shadow: 0 0 20px rgba(85, 255, 192, 0.35), inset 0 0 15px rgba(85, 255, 192, 0.20) !important;
+    opacity: 1 !important;
+    cursor: default !important;
+}
+
+div[data-testid="stPageLink"] a[aria-disabled="true"] p,
+div[data-testid="stPageLink"] a[aria-disabled="true"] span {
+    color: #55ffc0 !important;
+}
+
+
 .block-container {
     max-width: 1700px;
     padding: 14px 2rem 30px 2rem;
@@ -1129,9 +1189,9 @@ st.markdown(f"""
 # ============================================================
 nav_c1, nav_c2 = st.columns([1, 1])
 with nav_c1:
-    st.page_link("dashboard.py", label="🏭 Live Monitoring Dashboard (Active)", icon="🏭", disabled=True)
+    st.page_link("dashboard.py", label="🏭 LIVE MONITORING (ACTIVE)", icon="🏭", disabled=True)
 with nav_c2:
-    st.page_link("pages/2_Testing_Simulation.py", label="🧪 Switch to Testing / Simulation Page ➜", icon="🧪")
+    st.page_link("pages/2_Testing_Simulation.py", label="🧪 TESTING / SIMULATION MODE ➜", icon="🧪")
 
 
 # ============================================================

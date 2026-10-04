@@ -1,17 +1,23 @@
+# pyrefly: ignore [missing-import]
 import streamlit as st
 import pandas as pd
 import numpy as np
+# pyrefly: ignore [missing-import]
 import matplotlib.pyplot as plt
 from datetime import datetime
 import io
+import base64
 import struct
 import xml.etree.ElementTree as ET
+import math
+import wave
+from PIL import Image
 
 # ============================================================
 # PAGE CONFIGURATION (MUST BE FIRST STREAMLIT CALL)
 # ============================================================
 st.set_page_config(
-    page_title="Boiler AI - Testing / Simulation",
+    page_title="Boiler AI - Testing & Simulation Digital Twin",
     page_icon="🧪",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -26,6 +32,426 @@ TEMP_HIGH = 85.0
 
 FLOW_LOW = 0.30
 FLOW_NORMAL_MAX = 5.00
+
+# ============================================================
+# STATE INITIALIZATION
+# ============================================================
+if "sim_temp" not in st.session_state:
+    st.session_state.sim_temp = 60.0
+if "sim_flow" not in st.session_state:
+    st.session_state.sim_flow = 1.50
+if "sim_total" not in st.session_state:
+    st.session_state.sim_total = 2.00
+if "test_history" not in st.session_state:
+    st.session_state.test_history = []
+if "test_bmt" not in st.session_state:
+    st.session_state.test_bmt = None
+if "test_bmt_name" not in st.session_state:
+    st.session_state.test_bmt_name = ""
+
+# ============================================================
+# PROFESSIONAL SCADA UI STYLES (MATCHES PAGE 1 EXACTLY)
+# ============================================================
+st.markdown(r"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap');
+
+.stApp {
+    background:
+        radial-gradient(circle at 50% 0%, rgba(0, 190, 255, .10), transparent 30%),
+        linear-gradient(135deg, #02060c 0%, #06111b 52%, #02050a 100%);
+    color: #eaf8ff;
+}
+
+[data-testid="stToolbar"] {visibility:hidden !important;}
+footer {visibility:hidden !important;}
+#MainMenu {visibility:hidden !important;}
+header[data-testid="stHeader"] {background: transparent !important;}
+
+/* ============================================================
+   PROPER SCADA NAVIGATION BUTTONS
+   ============================================================ */
+div[data-testid="stPageLink"] {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+div[data-testid="stPageLink"] a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
+    border: 1.5px solid rgba(69, 231, 255, 0.45) !important;
+    color: #f0fbff !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), inset 0 0 15px rgba(69, 231, 255, 0.10) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+div[data-testid="stPageLink"] a:hover {
+    border-color: #45e7ff !important;
+    background: linear-gradient(135deg, #0d314d 0%, #071c2d 100%) !important;
+    box-shadow: 0 0 25px rgba(69, 231, 255, 0.55), inset 0 0 20px rgba(69, 231, 255, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+div[data-testid="stPageLink"] a p, 
+div[data-testid="stPageLink"] a span {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.2px !important;
+    color: #edfaff !important;
+    margin: 0 !important;
+}
+
+/* Active State for Current Page */
+div[data-testid="stPageLink"] a[aria-disabled="true"],
+div[data-testid="stPageLink"] a.disabled {
+    background: linear-gradient(135deg, rgba(8, 48, 35, 0.95) 0%, rgba(3, 24, 18, 0.95) 100%) !important;
+    border: 1.5px solid #55ffc0 !important;
+    box-shadow: 0 0 20px rgba(85, 255, 192, 0.35), inset 0 0 15px rgba(85, 255, 192, 0.20) !important;
+    opacity: 1 !important;
+    cursor: default !important;
+}
+
+div[data-testid="stPageLink"] a[aria-disabled="true"] p,
+div[data-testid="stPageLink"] a[aria-disabled="true"] span {
+    color: #55ffc0 !important;
+}
+
+.block-container {
+    max-width: 1700px;
+    padding: 14px 2rem 30px 2rem;
+}
+
+* {
+    font-family: 'Inter', sans-serif;
+}
+
+h1,h2,h3,h4 {
+    font-family: 'Orbitron', sans-serif !important;
+}
+
+.topbar {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:13px 18px;
+    margin-bottom:14px;
+    border:1px solid rgba(75,220,255,.18);
+    border-radius:12px;
+    background:rgba(3,12,21,.92);
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+}
+
+.brand {
+    font-family:'Orbitron',sans-serif;
+    font-weight:700;
+    letter-spacing:1.5px;
+    color:#f0fbff;
+}
+
+.brand span {color:#46e7ff;}
+
+.online {
+    color:#63ffc0;
+    font-weight:700;
+    letter-spacing:1px;
+    text-shadow:0 0 10px rgba(80,255,190,.35);
+}
+
+.sim-tag {
+    color:#ffd66b;
+    font-weight:700;
+    letter-spacing:1px;
+    text-shadow:0 0 10px rgba(255,214,107,.35);
+}
+
+.hero {
+    padding:24px 28px;
+    border-radius:18px;
+    border:1px solid rgba(65,220,255,.18);
+    background:
+      linear-gradient(110deg,rgba(8,28,44,.96),rgba(4,13,23,.95)),
+      radial-gradient(circle at right,rgba(255,90,20,.12),transparent 30%);
+    box-shadow:0 10px 35px rgba(0,0,0,.3);
+    animation:fadein .7s ease;
+}
+
+.hero-title {
+    font-family:'Orbitron',sans-serif;
+    font-size:clamp(23px,3vw,38px);
+    font-weight:800;
+    line-height:1.15;
+}
+
+.hero-title span {color:#45e7ff;text-shadow:0 0 20px rgba(69,231,255,.4);}
+
+.hero-sub {
+    color:#8faabb;
+    margin-top:8px;
+    font-size:16px;
+}
+
+.team-line {
+    margin-top:14px;
+    color:#7793a3;
+    font-size:13px;
+}
+
+.section-title {
+    margin:22px 0 10px;
+    padding:9px 13px;
+    border-left:3px solid #45e7ff;
+    background:linear-gradient(90deg,rgba(69,231,255,.08),transparent);
+    font-family:'Orbitron',sans-serif;
+    font-size:14px;
+    letter-spacing:1.4px;
+}
+
+.panel {
+    background:linear-gradient(145deg,rgba(8,23,37,.96),rgba(3,10,18,.96));
+    border:1px solid rgba(95,190,220,.14);
+    border-radius:15px;
+    padding:17px;
+    box-shadow:0 9px 30px rgba(0,0,0,.24);
+}
+
+.panel-head {
+    color:#70eaff;
+    font-family:'Orbitron',sans-serif;
+    font-size:12px;
+    letter-spacing:1.4px;
+    margin-bottom:10px;
+}
+
+.param {
+    padding:11px 0;
+    border-bottom:1px solid rgba(120,170,190,.10);
+}
+
+.param:last-child {border-bottom:none;}
+
+.param-name {color:#7894a5;font-size:12px;}
+.param-value {
+    font-family:'Orbitron',sans-serif;
+    font-size:25px;
+    font-weight:700;
+    color:#edfaff;
+}
+
+.boiler-area {
+    min-height:385px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+    overflow:hidden;
+}
+
+.boiler-body {
+    width:205px;
+    height:270px;
+    position:relative;
+    border:3px solid #78909b;
+    border-radius:30px 30px 45px 45px;
+    background:linear-gradient(90deg,#17252e,#4d626c 48%,#15242d);
+    box-shadow:
+        inset 0 0 28px rgba(0,0,0,.55),
+        0 0 25px rgba(70,210,255,.10);
+}
+
+.dome {
+    position:absolute;
+    width:92px;
+    height:34px;
+    top:-35px;
+    left:53px;
+    border:3px solid #78909b;
+    border-radius:50%;
+    background:#17242d;
+}
+
+.water {
+    position:absolute;
+    left:13px;
+    right:13px;
+    bottom:13px;
+    border-radius:0 0 30px 30px;
+    background:linear-gradient(#07506a,#062e40);
+    border-top:2px solid #42ddff;
+    overflow:hidden;
+    transition: height 0.4s ease;
+}
+
+.wave {
+    position:absolute;
+    width:180%;
+    height:30px;
+    left:-40%;
+    top:-8px;
+    border-radius:50%;
+    border-top:3px solid rgba(70,230,255,.7);
+    animation:wave 2s linear infinite;
+}
+
+.heater {
+    position:absolute;
+    width:112px;
+    height:15px;
+    left:46px;
+    bottom:7px;
+    border-radius:50%;
+    background:#ff6d1b;
+    box-shadow:0 0 18px #ff6414,0 0 48px rgba(255,75,0,.62);
+    animation:heater 1.1s ease-in-out infinite alternate;
+}
+
+.thermal-zone {
+    position:absolute;
+    width:120px;
+    height:120px;
+    right:-2px;
+    top:47px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(255,72,10,.48),transparent 67%);
+    filter:blur(3px);
+    animation:thermal 1.8s ease-in-out infinite alternate;
+}
+
+.sensor-dot {
+    position:absolute;
+    width:13px;
+    height:13px;
+    border-radius:50%;
+    background:#51eaff;
+    box-shadow:0 0 15px #51eaff;
+    animation:pulse 1.5s infinite;
+    z-index:5;
+}
+
+.pt100 {right:-25px;top:95px;}
+.flow {left:-25px;bottom:100px;}
+.thermal {right:28px;top:28px;background:#ff7b26;box-shadow:0 0 15px #ff7b26;}
+
+.pipe-left {
+    position:absolute;
+    width:90px;
+    height:30px;
+    left:calc(50% - 220px);
+    border:3px solid #718a96;
+    border-right:0;
+    border-radius:16px 0 0 16px;
+}
+
+.pipe-right {
+    position:absolute;
+    width:90px;
+    height:30px;
+    right:calc(50% - 220px);
+    border:3px solid #718a96;
+    border-left:0;
+    border-radius:0 16px 16px 0;
+}
+
+.flow-arrow {
+    position:absolute;
+    left:calc(50% - 245px);
+    color:#52eaff;
+    font-size:22px;
+    animation:moveflow 2s linear infinite;
+}
+
+.health {
+    text-align:center;
+}
+
+.health-circle {
+    width:150px;
+    height:150px;
+    margin:8px auto 15px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 30px rgba(80,255,190,.12);
+    transition: background 0.3s ease;
+}
+
+.health-inner {
+    width:116px;
+    height:116px;
+    border-radius:50%;
+    background:#06101a;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Orbitron',sans-serif;
+    font-size:28px;
+    font-weight:800;
+}
+
+.range-box {
+    padding:10px 13px;
+    border-radius:10px;
+    margin-top:9px;
+    background:rgba(9,24,37,.8);
+    border:1px solid rgba(100,190,220,.12);
+}
+
+.range-title {
+    color:#7894a5;
+    font-size:12px;
+}
+
+.range-value {
+    font-family:'Orbitron',sans-serif;
+    color:#eafaff;
+    font-size:16px;
+    font-weight:700;
+}
+
+.info-box {
+    padding:20px;
+    border-radius:14px;
+    border:1px solid rgba(75,220,255,.20);
+    background:rgba(5,24,35,.55);
+}
+
+.footer {
+    text-align:center;
+    color:#587284;
+    margin-top:25px;
+    padding-top:18px;
+    border-top:1px solid rgba(100,160,180,.10);
+    font-size:12px;
+    letter-spacing:1px;
+}
+
+.bench-card {
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(75,220,255,.24);
+    background: linear-gradient(135deg, rgba(8,26,40,.96), rgba(4,14,24,.96));
+    margin-bottom: 14px;
+}
+
+@keyframes fadein {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes wave {to{transform:translateX(45px)}}
+@keyframes heater {from{transform:scaleX(.88);opacity:.65}to{transform:scaleX(1.08);opacity:1}}
+@keyframes thermal {from{transform:scale(.82);opacity:.45}to{transform:scale(1.16);opacity:1}}
+@keyframes pulse {50%{transform:scale(1.55);opacity:.62}}
+@keyframes moveflow {from{transform:translateX(0);opacity:0}15%{opacity:1}80%{opacity:1}to{transform:translateX(175px);opacity:0}}
+</style>
+""", unsafe_allow_html=True)
 
 # ============================================================
 # HELPER DATA STRUCTURE
@@ -335,13 +761,39 @@ def bmt_summary(result):
     }
 
 
-def boiler_status(value, minimum, maximum, low_label, high_label):
-    """Return LOW, NORMAL, or HIGH status for a boiler parameter."""
-    if value < minimum:
-        return low_label
-    if value > maximum:
-        return high_label
-    return "NORMAL"
+def warning_beep_html():
+    """Generate a synthesized audio beep for audible fault alarming."""
+    sample_rate = 22050
+    duration = 0.22
+    frequency = 880
+    samples = int(sample_rate * duration)
+
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(sample_rate)
+
+        frames = bytearray()
+        for i in range(samples):
+            attack = min(1.0, i / (sample_rate * 0.015))
+            release = min(1.0, (samples - i) / (sample_rate * 0.035))
+            envelope = min(attack, release)
+            value = int(
+                15000 * envelope *
+                math.sin(2 * math.pi * frequency * i / sample_rate)
+            )
+            frames += int(value).to_bytes(2, byteorder="little", signed=True)
+
+        wav.writeframes(frames)
+
+    encoded = base64.b64encode(buf.getvalue()).decode("ascii")
+
+    return f"""
+    <audio autoplay loop>
+        <source src="data:audio/wav;base64,{encoded}" type="audio/wav">
+    </audio>
+    """
 
 
 def get_parameter_states(f, t, total_water):
@@ -571,292 +1023,558 @@ def sensor_fusion(f, t, thermal_tmax=None, hotspot=False, total_water=None):
 
 
 def fusion(f, t, thermal_tmax=None, hotspot=False, total_water=None):
-    """
-    Simulated sensor fusion runner returning (status, severity, diagnosis, action).
-    """
+    """Return (status, severity, diagnosis, action)."""
     status, severity = sensor_fusion(f, t, thermal_tmax=thermal_tmax, hotspot=hotspot, total_water=total_water)
     states = get_parameter_states(f, t, total_water if total_water is not None else 0.0)
     temp_state = states["temperature"]
     flow_state = states["flow"]
     water_state = states["total_water"]
     
-    thermal_text = f"{thermal_tmax:.1f} °C" if thermal_tmax is not None else "No radiometric BMT uploaded"
+    thermal_text = f"{thermal_tmax:.1f} °C" if thermal_tmax is not None else "Not available"
 
-    # Detailed diagnosis description
     if severity == "CRITICAL":
         diagnosis = (
-            f"Rule-based sensor fusion identified critical boiler hazard: {status}. "
-            f"PT100 is {temp_state} ({t:.1f} °C), flow is {flow_state} ({f:.2f} L/min), "
-            f"total water is {water_state} ({total_water:.2f} L), and Testo 872 Tmax is {thermal_text}."
+            f"Rule-based sensor fusion detected {status}. "
+            f"PT100 is {temp_state} ({t:.2f} °C), YF-S201 flow is {flow_state} "
+            f"({f:.2f} L/min), total water is {water_state} ({total_water:.3f} L), "
+            f"and Testo 872 Tmax is {thermal_text}. "
+            "Multiple sensor conditions agree with the diagnosed fault."
         )
     elif severity == "WARNING":
         diagnosis = (
-            f"Process anomaly detected: {status}. "
-            f"PT100 is {temp_state} ({t:.1f} °C), flow is {flow_state} ({f:.2f} L/min), "
-            f"total water is {water_state} ({total_water:.2f} L), and Testo 872 Tmax is {thermal_text}."
+            f"Rule-based sensor fusion detected {status}. "
+            f"PT100 is {temp_state} ({t:.2f} °C), YF-S201 flow is {flow_state} "
+            f"({f:.2f} L/min), total water is {water_state} ({total_water:.3f} L), "
+            f"and Testo 872 Tmax is {thermal_text}. "
+            "The combination of these measurements indicates a condition that should be checked."
         )
     else:
         diagnosis = (
-            f"All monitored parameters are within safe operating limits. "
-            f"Temperature ({t:.1f} °C), flow ({f:.2f} L/min), and cumulative volume ({total_water:.2f} L) are normal."
+            f"No abnormal combination detected. "
+            f"PT100 is {temp_state} ({t:.2f} °C), YF-S201 flow is {flow_state} "
+            f"({f:.2f} L/min), total water is {water_state} ({total_water:.3f} L), "
+            f"and Testo 872 Tmax is {thermal_text}."
         )
 
-    # Specific actionable engineering recommendations
     if "INLET" in status or "PUMP" in status or "FLOW RESTRICTION" in status:
-        action = "Check inlet solenoid valve, inspect pump electrical feed and relay, clear sediment from YF-S201 sensor, and confirm water feed pressure."
+        action = "Inspect inlet valve, check pump power and relay line, clean sediment filter, and check water supply line."
     elif "OVERHEATING" in status or "CRITICAL PT100" in status or "HEATER CONTROL" in status:
-        action = "Immediately disengage boiler heating coils, activate emergency cooling/venting, verify thermocouple/PT100 calibration, and inspect solid-state relay (SSR)."
+        action = "Immediately shut down heating coils, verify thermostat/PT100 calibration, and inspect solid-state relay (SSR)."
     elif "DRY-RUN" in status or "LOW WATER" in status:
-        action = "Halt boiler heating immediately to prevent tube burnout. Verify feed tank water level and prime the inlet pump before restarting."
+        action = "Stop heater immediately to protect tube bundle. Prime water feed pump and refill feed tank."
     elif "HOTSPOT" in status or "FOULING" in status:
-        action = "Schedule boiler descaling and clean tube bundle. Inspect refractory insulation around the detected hotspot coordinates."
+        action = "Schedule boiler descaling and clean shell tube surfaces. Inspect insulation around hotspot coordinates."
     elif "LOW BOILER TEMPERATURE" in status or "LOW HEATING" in status:
-        action = "Inspect heating elements for continuity or phase loss. Check contactor and temperature setpoint configuration."
+        action = "Check heating elements for continuity or phase loss. Inspect contactor and temperature controller."
     elif "EXCESSIVE FLOW" in status or "HIGH FLOW" in status:
-        action = "Throttle intake control valve and verify pressure regulator downstream of the feed pump."
+        action = "Throttle water intake valve and verify pump pressure regulator."
     elif severity == "WARNING":
-        action = "Perform routine diagnostic check on indicated sensor channel and monitor trends closely."
+        action = "Perform routine diagnostic check on indicated sensor channel and inspect physical connections."
     else:
-        action = "System operating optimally. Continue standard supervisory monitoring."
+        action = "System operating within normal parameters. Continue standard supervisory monitoring."
 
     return status, severity, diagnosis, action
 
 
 # ============================================================
-# STYLING & BRANDING
-# ============================================================
-st.markdown(r"""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap');
-.stApp {background:radial-gradient(circle at 50% 0%,rgba(0,190,255,.10),transparent 30%),linear-gradient(135deg,#02060c 0%,#06111b 52%,#02050a 100%);color:#eaf8ff;}
-[data-testid="stToolbar"] {visibility:hidden !important;} footer {visibility:hidden !important;} #MainMenu {visibility:hidden !important;} header[data-testid="stHeader"] {background:transparent !important;}
-.block-container {max-width:1700px;padding:14px 2rem 30px 2rem;} * {font-family:'Inter',sans-serif;}
-h1,h2,h3,h4 {font-family:'Orbitron',sans-serif !important;}
-.topbar {display:flex;align-items:center;justify-content:space-between;padding:13px 18px;margin-bottom:14px;border:1px solid rgba(75,220,255,.18);border-radius:12px;background:rgba(3,12,21,.92);}
-.brand {font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:1.5px;color:#f0fbff;} .brand span {color:#46e7ff;}
-.section-title {font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:1px;margin:18px 0 10px;color:#9eefff;}
-.metric-card {padding:18px;border:1px solid rgba(75,220,255,.18);border-radius:14px;background:rgba(3,12,21,.88);text-align:center;}
-.metric-label {font-size:12px;color:#89a8b8;letter-spacing:1px;text-transform:uppercase;} .metric-value {font-family:'Orbitron',sans-serif;font-size:30px;font-weight:700;margin-top:5px;color:#f4fdff;}
-.status-normal {color:#63ffc0;font-weight:800;} .status-warning {color:#ffd166;font-weight:800;} .status-critical {color:#ff6868;font-weight:800;}
-.info-box {padding:18px;border-radius:14px;border:1px solid rgba(75,220,255,.20);background:rgba(5,24,35,.55);}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="topbar"><div class="brand">BOILER <span>AI</span> • TESTING / SIMULATION</div><div>🧪 <b>OFFLINE TEST MODE</b></div></div>', unsafe_allow_html=True)
-
-# ============================================================
-# PAGE NAVIGATION BAR (MAIN SCREEN)
-# ============================================================
-nav_c1, nav_c2 = st.columns([1, 1])
-with nav_c1:
-    st.page_link("dashboard.py", label="🏭 ➜ Return to Live Monitoring Dashboard", icon="🏭")
-with nav_c2:
-    st.page_link("pages/2_Testing_Simulation.py", label="🧪 Testing / Simulation Mode (Active)", icon="🧪", disabled=True)
-
-
-# ============================================================
-# STATE INITIALIZATION
-# ============================================================
-if "test_history" not in st.session_state:
-    st.session_state.test_history = []
-if "test_bmt" not in st.session_state:
-    st.session_state.test_bmt = None
-if "test_bmt_name" not in st.session_state:
-    st.session_state.test_bmt_name = ""
-
-# ============================================================
-# SIDEBAR NAVIGATION
+# SIDEBAR NAVIGATION & SETTINGS
 # ============================================================
 st.sidebar.markdown("## 🧭 Navigation")
 st.sidebar.page_link("dashboard.py", label="🏭 Live Monitoring", icon="🏭")
 st.sidebar.page_link("pages/2_Testing_Simulation.py", label="🧪 Testing / Simulation", icon="🧪")
 st.sidebar.markdown("---")
-st.sidebar.caption("Change process values without connecting the physical boiler.")
+
+st.sidebar.header("⚙️ SIMULATION CONFIGURATION")
+st.sidebar.caption("Offline Digital Twin Mode: Inject manual sensor readings without physical hardware.")
+st.sidebar.markdown("---")
+st.sidebar.subheader("🌡️ Temperature Range")
+TEMP_LOW = st.sidebar.number_input("Minimum / Low (°C)", value=TEMP_LOW)
+TEMP_NORMAL_MAX = st.sidebar.number_input("Normal upper limit (°C)", value=TEMP_NORMAL_MAX)
+TEMP_HIGH = st.sidebar.number_input("High / Fault limit (°C)", value=TEMP_HIGH)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("💧 Flow Range")
+FLOW_LOW = st.sidebar.number_input("Low-flow limit (L/min)", value=FLOW_LOW)
+FLOW_NORMAL_MAX = st.sidebar.number_input("Normal upper limit (L/min)", value=FLOW_NORMAL_MAX)
 
 # ============================================================
-# MANUAL PROCESS SLIDERS
+# TOP BAR (MATCHES PAGE 1 EXACTLY)
 # ============================================================
-st.markdown('<div class="section-title">🎛️ MANUAL SENSOR INPUTS</div>', unsafe_allow_html=True)
-c1, c2, c3 = st.columns(3)
-with c1:
-    manual_temp = st.slider("PT100 Temperature (°C)", 0.0, 150.0, 60.0, 0.5)
-with c2:
-    manual_flow = st.slider("YF-S201 Flow (L/min)", 0.0, 20.0, 1.5, 0.05)
-with c3:
-    manual_total = st.slider("Total Water (L)", 0.0, 20.0, 2.0, 0.05)
+clock = datetime.now().strftime("%H:%M:%S")
+
+st.markdown(f"""
+<div class="topbar">
+    <div class="brand">🔥 <span>BOILER AI</span> / CONTROL & DIAGNOSTICS</div>
+    <div><span class="sim-tag">🧪 OFFLINE TEST & SIMULATION MODE</span> &nbsp; | &nbsp; <span class="online">● DIGITAL TWIN ONLINE</span> &nbsp; | &nbsp; {clock}</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ============================================================
-# TESTO 872 BMT UPLOAD
+# HERO HEADER (MATCHES PAGE 1 EXACTLY)
 # ============================================================
-st.markdown('<div class="section-title">🌡️ OPTIONAL TESTO 872 BMT</div>', unsafe_allow_html=True)
-bmt_file = st.file_uploader("Upload Testo 872 .BMT for radiometric thermal analysis", type=["bmt"], key="testing_bmt")
-if bmt_file is not None:
-    try:
-        parsed = parse_testo_bmt(bmt_file.getvalue())
-        st.session_state.test_bmt = parsed
-        st.session_state.test_bmt_name = bmt_file.name
-        st.success(f"BMT loaded: {bmt_file.name}")
-    except Exception as e:
-        st.session_state.test_bmt = None
-        st.error(f"BMT parsing failed: {e}")
+st.markdown("""
+<div class="hero">
+    <div class="hero-title">AI-BASED <span>BOILER</span> PREDICTIVE FAULT DETECTION</div>
+    <div class="hero-sub">Offline cyber-physical digital twin • Interactive fault injection • Multi-sensor fusion</div>
+    <div class="team-line">MENTOR: <b>N INDHU</b> &nbsp; | &nbsp; MENTEES: <b>RUJITH RS</b> • <b>SANJUSRINITHA T</b> • <b>RHOGETHRAM S T</b></div>
+</div>
+""", unsafe_allow_html=True)
 
+# ============================================================
+# PROPER GLOWING SCADA NAVIGATION BAR (MAIN SCREEN)
+# ============================================================
+nav_c1, nav_c2 = st.columns([1, 1])
+with nav_c1:
+    st.page_link("dashboard.py", label="🏭 ➔ RETURN TO LIVE MONITORING", icon="🏭")
+with nav_c2:
+    st.page_link("pages/2_Testing_Simulation.py", label="🧪 TESTING / SIMULATION MODE (ACTIVE)", icon="🧪", disabled=True)
+
+# ============================================================
+# FAULT INJECTION & INTERACTIVE BENCHMARK
+# ============================================================
+st.markdown('<div class="section-title">🎛️ FAULT INJECTION & MANUAL SENSOR BENCHMARK</div>', unsafe_allow_html=True)
+
+st.caption("⚡ Quick Test Presets: Click any preset button to immediately simulate that condition across the entire digital twin.")
+
+p1, p2, p3, p4, p5 = st.columns(5)
+with p1:
+    if st.button("🟢 NORMAL OPERATION", use_container_width=True):
+        st.session_state.sim_temp = 60.0
+        st.session_state.sim_flow = 1.50
+        st.session_state.sim_total = 2.00
+        st.rerun()
+with p2:
+    if st.button("🟡 LOW INLET FLOW", use_container_width=True):
+        st.session_state.sim_temp = 60.0
+        st.session_state.sim_flow = 0.15
+        st.session_state.sim_total = 2.00
+        st.rerun()
+with p3:
+    if st.button("🔴 OVERHEATING", use_container_width=True):
+        st.session_state.sim_temp = 90.0
+        st.session_state.sim_flow = 1.50
+        st.session_state.sim_total = 2.00
+        st.rerun()
+with p4:
+    if st.button("🚨 DRY-RUN HAZARD", use_container_width=True):
+        st.session_state.sim_temp = 92.0
+        st.session_state.sim_flow = 0.10
+        st.session_state.sim_total = 0.20
+        st.rerun()
+with p5:
+    if st.button("⚠️ SUPPLY FAILURE", use_container_width=True):
+        st.session_state.sim_temp = 25.0
+        st.session_state.sim_flow = 0.10
+        st.session_state.sim_total = 0.15
+        st.rerun()
+
+sl1, sl2, sl3 = st.columns(3)
+with sl1:
+    sim_flow = st.slider("💧 YF-S201 Flow Rate (L/min)", 0.00, 20.00, float(st.session_state.sim_flow), 0.05, key="sl_flow")
+    st.session_state.sim_flow = sim_flow
+with sl2:
+    sim_temp = st.slider("🌡️ PT100 Temperature (°C)", 0.0, 150.0, float(st.session_state.sim_temp), 0.5, key="sl_temp")
+    st.session_state.sim_temp = sim_temp
+with sl3:
+    sim_total = st.slider("💧 Cumulative Total Water (L)", 0.00, 20.00, float(st.session_state.sim_total), 0.05, key="sl_total")
+    st.session_state.sim_total = sim_total
+
+# Optional Testo 872 BMT upload
 thermal_tmax = None
 hotspot = False
+bmt_stats = None
 if st.session_state.test_bmt is not None:
     bmt_stats = bmt_summary(st.session_state.test_bmt)
     if bmt_stats:
         thermal_tmax = float(bmt_stats.get("tmax")) if bmt_stats.get("tmax") is not None else None
-        hotspot = thermal_tmax is not None and thermal_tmax >= TEMP_NORMAL_MAX
+        hotspot = thermal_tmax is not None and thermal_tmax >= TEMP_HIGH
+
+# Execute sensor fusion calculation
+status, severity, diagnosis, action = fusion(
+    sim_flow,
+    sim_temp,
+    thermal_tmax=thermal_tmax,
+    hotspot=hotspot,
+    total_water=sim_total
+)
+
+# Append to history
+st.session_state.test_history.append({
+    "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "Flow (L/min)": sim_flow,
+    "PT100 (°C)": sim_temp,
+    "Total Water (L)": sim_total,
+    "Testo Tmax (°C)": thermal_tmax,
+    "Status": status,
+    "Severity": severity
+})
+st.session_state.test_history = st.session_state.test_history[-1000:]
 
 # ============================================================
-# SIMULATION TRIGGER
+# MAIN PROCESS VISUALIZATION (IDENTICAL DIGITAL TWIN TO PAGE 1)
 # ============================================================
-run = st.button("▶ RUN TEST / SIMULATION", type="primary", use_container_width=True)
-if run:
-    status, severity, diagnosis, action = fusion(
-        manual_flow,
-        manual_temp,
-        thermal_tmax=thermal_tmax,
-        hotspot=hotspot,
-        total_water=manual_total
-    )
-    result = {
-        "flow": manual_flow,
-        "temp": manual_temp,
-        "total": manual_total,
-        "thermal_tmax": thermal_tmax,
-        "status": status,
-        "severity": severity,
-        "diagnosis": diagnosis,
-        "action": action,
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    st.session_state.test_result = result
-    st.session_state.test_history.append(result.copy())
-    st.session_state.test_history = st.session_state.test_history[-1000:]
+st.markdown('<div class="section-title">LIVE PROCESS OVERVIEW (SIMULATED DIGITAL TWIN)</div>', unsafe_allow_html=True)
 
-# ============================================================
-# TEST RESULTS DISPLAY
-# ============================================================
-result = st.session_state.get("test_result")
-if result:
-    st.markdown('<div class="section-title">📊 TEST RESULT</div>', unsafe_allow_html=True)
-    a, b, c, d = st.columns(4)
-    with a:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">PT100</div><div class="metric-value">{result["temp"]:.1f} °C</div></div>', unsafe_allow_html=True)
-    with b:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">YF-S201 FLOW</div><div class="metric-value">{result["flow"]:.2f} L/min</div></div>', unsafe_allow_html=True)
-    with c:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">TOTAL WATER</div><div class="metric-value">{result["total"]:.2f} L</div></div>', unsafe_allow_html=True)
-    with d:
-        t = 'N/A' if result["thermal_tmax"] is None else f'{result["thermal_tmax"]:.1f} °C'
-        st.markdown(f'<div class="metric-card"><div class="metric-label">TESTO TMAX</div><div class="metric-value">{t}</div></div>', unsafe_allow_html=True)
+left, middle, right = st.columns([1.0, 1.55, 1.0])
 
-    sev = result["severity"].upper()
-    cls = "status-normal" if sev == "NORMAL" else ("status-warning" if sev in ("LOW", "HIGH", "WARNING") else "status-critical")
-    st.markdown(f'<div class="info-box"><h3 class="{cls}">STATUS: {result["status"]} • SEVERITY: {result["severity"]}</h3><h3>🔎 {result["diagnosis"]}</h3><p><b>Recommended Action:</b> {result["action"]}</p></div>', unsafe_allow_html=True)
-    
-    if sev in ("HIGH", "CRITICAL"):
-        st.error("⚠️ WARNING — Simulated abnormal condition detected. This is a software test only.")
-    elif sev in ("LOW", "WARNING"):
-        st.warning("⚠️ Simulated warning condition detected.")
+with left:
+    st.markdown("""
+<div class="panel">
+<div class="panel-head">SIMULATED INPUTS</div>
+<div class="param">
+<div class="param-name">YF-S201 FLOW</div>
+<div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">L/min</span></div>
+</div>
+<div class="param">
+<div class="param-name">PT100 TEMPERATURE</div>
+<div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">°C</span></div>
+</div>
+<div class="param">
+<div class="param-name">TOTAL WATER</div>
+<div class="param-value">%.3f <span style="font-size:13px;color:#7795a5;">L</span></div>
+</div>
+</div>
+""" % (sim_flow, sim_temp, sim_total), unsafe_allow_html=True)
+
+with middle:
+    # Dynamically adjust water height and heater flame based on simulated values
+    water_height_pct = min(85, max(15, int((sim_total / 5.0) * 57))) if sim_total is not None else 57
+    heater_glow_color = "#ff2200" if sim_temp >= TEMP_HIGH else ("#ff6d1b" if sim_temp >= TEMP_NORMAL_MAX else "#ff9933")
+    heater_glow_shadow = f"0 0 25px {heater_glow_color}, 0 0 55px {heater_glow_color}"
+    flow_opacity = "1.0" if sim_flow >= FLOW_LOW else "0.3"
+
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">DIGITAL BOILER MODEL (INTERACTIVE)</div>
+<div class="boiler-area">
+    <div class="pipe-left"></div>
+    <div class="pipe-right"></div>
+    <div class="flow-arrow" style="opacity:{flow_opacity};">➜</div>
+    <div class="boiler-body">
+        <div class="dome"></div>
+        <div class="thermal-zone"></div>
+        <div class="sensor-dot pt100"></div>
+        <div class="sensor-dot flow"></div>
+        <div class="sensor-dot thermal"></div>
+        <div class="water" style="height:{water_height_pct}%;"><div class="wave"></div></div>
+        <div class="heater" style="background:{heater_glow_color};box-shadow:{heater_glow_shadow};"></div>
+    </div>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+with right:
+    # Dynamic Health Index calculation
+    if severity == "CRITICAL":
+        health_text = "24%"
+        health_color = "#ff5555"
+        health_deg = 24
+    elif severity == "WARNING":
+        health_text = "68%"
+        health_color = "#ffd66b"
+        health_deg = 68
     else:
-        st.success("✅ Simulated process is within the configured normal range.")
+        health_text = "96%"
+        health_color = "#55ffc0"
+        health_deg = 96
+
+    health_message = "NORMAL" if severity == "NORMAL" else severity
+
+    st.markdown(f"""
+<div class="panel health">
+<div class="panel-head">AI HEALTH INDEX</div>
+<div class="health-circle" style="background:conic-gradient({health_color} 0 {health_deg}%, #122632 {health_deg}% 100%);">
+    <div class="health-inner">{health_text}</div>
+</div>
+<div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:{health_color};">{health_message}</div>
+<div style="color:#7894a5;margin-top:7px;font-size:13px;">Sensor-fusion assessment</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ============================================================
-# SENSOR STATE BREAKDOWN
+# THRESHOLD MONITORING (IDENTICAL TO PAGE 1)
 # ============================================================
-st.markdown('<div class="section-title">🔬 SENSOR STATE BREAKDOWN</div>', unsafe_allow_html=True)
-states = get_parameter_states(manual_flow, manual_temp, manual_total)
-q1, q2, q3, q4 = st.columns(4)
-with q1:
-    st.metric("PT100 State", states["temperature"])
-with q2:
-    st.metric("Flow State", states["flow"])
-with q3:
-    st.metric("Total Water State", states["total_water"])
-with q4:
-    thermal_val = ("CRITICAL" if thermal_tmax >= TEMP_HIGH else ("HIGH" if thermal_tmax >= TEMP_NORMAL_MAX else "NORMAL")) if thermal_tmax is not None else "NO BMT DATA"
-    st.metric("Testo 872 Tmax State", thermal_val)
+st.markdown('<div class="section-title">THRESHOLD MONITORING</div>', unsafe_allow_html=True)
+
+t1, t2, t3 = st.columns(3)
+
+with t1:
+    temp_state = (
+        "CRITICAL" if sim_temp >= TEMP_HIGH
+        else "HIGH" if sim_temp > TEMP_NORMAL_MAX
+        else "LOW" if sim_temp < TEMP_LOW
+        else "NORMAL"
+    )
+    temp_color = (
+        "#ff5555" if temp_state in ("LOW", "CRITICAL")
+        else "#ffd66b" if temp_state == "HIGH"
+        else "#63ffc0"
+    )
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">🌡️ TEMPERATURE</div>
+<div class="range-box"><div class="range-title">CURRENT SIMULATED</div><div class="range-value">{sim_temp:.2f} °C</div></div>
+<div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">{TEMP_LOW:.0f} – {TEMP_NORMAL_MAX:.0f} °C</div></div>
+<div class="range-box"><div class="range-title">FAULT LIMIT</div><div class="range-value" style="color:{temp_color};">{TEMP_HIGH:.0f} °C • {temp_state}</div></div>
+</div>
+""", unsafe_allow_html=True)
+
+with t2:
+    flow_state = (
+        "LOW" if sim_flow < FLOW_LOW
+        else "HIGH" if sim_flow > FLOW_NORMAL_MAX
+        else "NORMAL"
+    )
+    flow_color = "#ff7777" if flow_state == "LOW" else "#63ffc0"
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">💧 FLOW</div>
+<div class="range-box"><div class="range-title">CURRENT SIMULATED</div><div class="range-value">{sim_flow:.2f} L/min</div></div>
+<div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">{FLOW_LOW:.2f} – {FLOW_NORMAL_MAX:.2f} L/min</div></div>
+<div class="range-box"><div class="range-title">STATUS</div><div class="range-value" style="color:{flow_color};">{flow_state}</div></div>
+</div>
+""", unsafe_allow_html=True)
+
+with t3:
+    water_state = (
+        "LOW" if sim_total < 0.50
+        else "HIGH" if sim_total > 5.00
+        else "NORMAL"
+    )
+    water_color = "#ff5555" if water_state != "NORMAL" else "#63ffc0"
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">💧 TOTAL WATER</div>
+<div class="range-box"><div class="range-title">CURRENT SIMULATED</div><div class="range-value">{sim_total:.3f} L</div></div>
+<div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">0.50 – 5.00 L</div></div>
+<div class="range-box"><div class="range-title">STATUS</div><div class="range-value" style="color:{water_color};">{water_state}</div></div>
+</div>
+""", unsafe_allow_html=True)
 
 # ============================================================
-# RADIOMETRIC MATRIX & PLOT
+# FUSION ENGINE CHANNELS (IDENTICAL TO PAGE 1)
 # ============================================================
-if st.session_state.test_bmt is not None:
-    st.markdown('<div class="section-title">🌡️ TESTO 872 RADIOMETRIC RESULT</div>', unsafe_allow_html=True)
-    stats = bmt_summary(st.session_state.test_bmt)
-    if stats:
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Tmax", f"{stats['tmax']:.2f} °C")
-        m2.metric("Tmin", f"{stats['tmin']:.2f} °C")
-        m3.metric("Average", f"{stats['tavg']:.2f} °C")
-        m4.metric("Hotspot", f"X={stats['hot_x']}, Y={stats['hot_y']}")
+st.markdown('<div class="section-title">🧠 SENSOR FUSION & FAULT DIAGNOSTICS</div>', unsafe_allow_html=True)
 
-        arr = stats.get("matrix")
-        if arr is not None:
-            fig, ax = plt.subplots(figsize=(8, 4.5))
-            fig.patch.set_facecolor('#040e18')
-            ax.set_facecolor('#040e18')
-            im = ax.imshow(arr, cmap="inferno", aspect="auto")
-            hx = stats.get("hotspot_x", stats.get("hot_x"))
-            hy = stats.get("hotspot_y", stats.get("hot_y"))
-            if hx is not None and hy is not None:
-                ax.scatter([hx], [hy], marker="x", color="#00ffff", s=120, linewidths=2.5, label=f"Hotspot ({stats['tmax']:.1f}°C)")
-                ax.legend(facecolor='#030d17', edgecolor='#4bdcff', labelcolor='#ffffff')
-            ax.set_title("Testo 872 Radiometric Thermal Matrix", color="#9eefff", fontsize=12, fontweight="bold")
-            ax.set_xlabel("Pixel X", color="#89a8b8")
-            ax.set_ylabel("Pixel Y", color="#89a8b8")
-            ax.tick_params(colors="#89a8b8")
-            cbar = fig.colorbar(im, ax=ax)
-            cbar.set_label("Temperature (°C)", color="#89a8b8")
-            cbar.ax.yaxis.set_tick_params(color="#89a8b8")
-            plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color="#89a8b8")
-            fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
+f1, f2, f3 = st.columns(3)
 
-            st.download_button(
-                "⬇️ Download Radiometric Matrix CSV",
-                pd.DataFrame(arr).to_csv(index=False).encode("utf-8"),
-                "testo_872_test_matrix.csv",
-                "text/csv"
-            )
+with f1:
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">FLOW CHANNEL</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+<span>YF-S201</span><b style="color:{'#63ffc0' if flow_state == 'NORMAL' else '#ff7777'};">{flow_state}</b>
+</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+<span>Threshold</span><b>{FLOW_LOW:.2f} L/min</b>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
-# ============================================================
-# QUICK TEST CASES
-# ============================================================
-st.markdown('<div class="section-title">🧰 QUICK TEST CASES</div>', unsafe_allow_html=True)
-q1, q2, q3, q4 = st.columns(4)
-with q1:
-    st.caption("NORMAL")
-    st.code("60 °C | 1.5 L/min | 2.0 L")
-with q2:
-    st.caption("LOW FLOW")
-    st.code("60 °C | 0.1 L/min | 2.0 L")
-with q3:
-    st.caption("OVERHEATING")
-    st.code("90 °C | 1.5 L/min | 2.0 L")
-with q4:
-    st.caption("COMBINED FAULT")
-    st.code("90 °C | 0.1 L/min | 0.2 L")
+with f2:
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">TEMPERATURE CHANNEL</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+<span>PT100</span><b style="color:{'#ff5555' if temp_state in ('LOW', 'CRITICAL') else '#ffd66b' if temp_state == 'HIGH' else '#63ffc0'};">{sim_temp:.2f} °C • {temp_state}</b>
+</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+<span>Limit</span><b>{TEMP_HIGH:.0f} °C</b>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+with f3:
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">THERMAL CHANNEL • TESTO 872 BMT</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+<span>Testo 872</span><b style="color:{'#63ffc0' if thermal_tmax is not None else '#ffd66b'};">
+{'BMT LOADED' if thermal_tmax is not None else 'WAITING'}
+</b>
+</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+<span>Radiometric Tmax</span><b>{f"{thermal_tmax:.2f} °C" if thermal_tmax is not None else "-- °C"}</b>
+</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+<span>Hotspot</span><b>{f"X={bmt_stats['hot_x']}, Y={bmt_stats['hot_y']}" if bmt_stats else "--"}</b>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ============================================================
-# SIMULATION HISTORY
+# TESTO 872 RADIOMETRIC BMT INPUT (IDENTICAL TO PAGE 1)
 # ============================================================
-st.markdown('<div class="section-title">📈 SIMULATION HISTORY</div>', unsafe_allow_html=True)
-hist = pd.DataFrame(st.session_state.test_history)
-if not hist.empty:
-    x = pd.to_datetime(hist["time"])
+st.markdown('<div class="section-title">📁 TESTO 872 RADIOMETRIC BMT INPUT</div>', unsafe_allow_html=True)
+bu1, bu2 = st.columns([1.2, 1.0])
+
+with bu1:
+    bmt_file = st.file_uploader(
+        "Upload Testo 872 .BMT file — BMT only",
+        type=["bmt"],
+        key="testo_bmt_upload_sim",
+        help="Upload the BMT captured by the Testo 872 to evaluate radiometric thermal sensor fusion."
+    )
+
+    if bmt_file is not None:
+        try:
+            bmt_res = parse_testo_bmt(bmt_file.getvalue())
+            st.session_state.test_bmt = bmt_res
+            st.session_state.test_bmt_name = bmt_file.name
+            st.success(f"Loaded: {bmt_file.name}")
+            st.rerun()
+        except Exception as e:
+            st.session_state.test_bmt = None
+            st.session_state.test_bmt_name = ""
+            st.error(f"BMT parsing failed: {e}")
+
+with bu2:
+    if st.session_state.test_bmt is not None and bmt_stats:
+        st.markdown(f"""
+<div class="panel">
+<div class="panel-head">RADIOMETRIC RESULTS</div>
+<div class="param"><div class="param-name">FILE</div>
+<div style="color:#eafaff;font-size:13px;">{st.session_state.test_bmt_name}</div></div>
+<div class="param"><div class="param-name">TMAX</div>
+<div class="param-value">{bmt_stats["tmax"]:.2f} °C</div></div>
+<div class="param"><div class="param-name">TMIN</div>
+<div class="param-value">{bmt_stats["tmin"]:.2f} °C</div></div>
+<div class="param"><div class="param-name">AVERAGE</div>
+<div class="param-value">{bmt_stats["tavg"]:.2f} °C</div></div>
+<div class="param"><div class="param-name">HOTSPOT PIXEL</div>
+<div style="color:#eafaff;font-size:16px;">X={bmt_stats["hot_x"]}, Y={bmt_stats["hot_y"]}</div></div>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown('<div class="section-title">📷 REAL IMAGE + 🌡️ THERMAL IMAGE</div>', unsafe_allow_html=True)
+        img1, img2 = st.columns(2)
+
+        with img1:
+            st.markdown('<div class="panel"><div class="panel-head">REAL IMAGE (EMBEDDED VISUAL JPEG)</div>', unsafe_allow_html=True)
+            vis = st.session_state.test_bmt.get("visual_jpeg")
+            if vis:
+                try:
+                    img = Image.open(io.BytesIO(vis))
+                    st.image(img, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Failed to display visual JPEG: {e}")
+            else:
+                st.info("No embedded visual image in this BMT.")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with img2:
+            st.markdown('<div class="panel"><div class="panel-head">RADIOMETRIC THERMAL MATRIX HEATMAP</div>', unsafe_allow_html=True)
+            try:
+                matrix = st.session_state.test_bmt["temperature_matrix"]
+                fig, ax = plt.subplots(figsize=(7, 4.5))
+                fig.patch.set_facecolor('#040e18')
+                ax.set_facecolor('#040e18')
+                im = ax.imshow(matrix, cmap="inferno", aspect="auto")
+                ax.plot(
+                    bmt_stats["hot_x"],
+                    bmt_stats["hot_y"],
+                    marker="x",
+                    color="#00ffff",
+                    markersize=12,
+                    markeredgewidth=2
+                )
+                ax.text(
+                    bmt_stats["hot_x"] + 5,
+                    bmt_stats["hot_y"] + 5,
+                    f"Tmax {bmt_stats['tmax']:.1f}°C",
+                    fontsize=9,
+                    color="#ffffff"
+                )
+                cbar = fig.colorbar(im, ax=ax)
+                cbar.set_label("Temperature (°C)", color="#89a8b8")
+                cbar.ax.yaxis.set_tick_params(color="#89a8b8")
+                plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color="#89a8b8")
+                fig.tight_layout()
+                st.pyplot(fig, use_container_width=True)
+                plt.close(fig)
+            except Exception as e:
+                st.error(f"Thermal image rendering failed: {e}")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Download CSV
+        matrix = st.session_state.test_bmt["temperature_matrix"]
+        csv_buf = io.StringIO()
+        np.savetxt(csv_buf, matrix, delimiter=",", fmt="%.3f")
+        st.download_button(
+            "⬇️ Download Radiometric Matrix (CSV)",
+            data=csv_buf.getvalue().encode("utf-8"),
+            file_name="testo_872_sim_matrix.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info("Upload a Testo 872 BMT file to include raw radiometric IR matrix evaluation in the simulation.")
+
+# ============================================================
+# FAULT ANALYSIS / CONCLUSION (IDENTICAL TO PAGE 1)
+# ============================================================
+st.markdown('<div class="section-title">🔎 FAULT ANALYSIS — THERMAL IMAGE + SENSOR FUSION</div>', unsafe_allow_html=True)
+a1, a2 = st.columns([1.15, 1.0])
+
+with a1:
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">WHAT PROBLEM IS DETECTED?</div>
+<div style="font-size:25px;font-weight:800;margin:8px 0 12px;color:{'#ff5555' if severity == 'CRITICAL' else ('#ffd66b' if severity == 'WARNING' else '#63ffc0')};">{status}</div>
+<div style="color:#b8cbd5;font-size:14px;line-height:1.65;">{diagnosis}</div>
+<div style="margin-top:16px;padding:12px;border-radius:10px;background:rgba(2,10,18,.8);border:1px solid rgba(69,231,255,.2);">
+    <b style="color:#45e7ff;">Recommended Action:</b><br>
+    <span style="color:#eaf8ff;font-size:13.5px;">{action}</span>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+with a2:
+    thermal_str = f"{thermal_tmax:.2f} °C" if thermal_tmax is not None else "Not available"
+    st.markdown(f"""
+<div class="panel">
+<div class="panel-head">FUSION EVIDENCE</div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>PT100</span><b>{sim_temp:.2f} °C</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>YF-S201 Flow</span><b>{sim_flow:.2f} L/min</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water</span><b>{sim_total:.3f} L</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Testo 872 Tmax</span><b>{thermal_str}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Temperature State</span><b>{temp_state}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Flow State</span><b>{flow_state}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water State</span><b>{water_state}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Fusion Decision</span><b style="color:{'#ff5555' if severity == 'CRITICAL' else ('#ffd66b' if severity == 'WARNING' else '#63ffc0')};">{severity}</b></div>
+</div>
+""", unsafe_allow_html=True)
+
+if severity == "CRITICAL":
+    st.error(f"🚨 CRITICAL FAULT: {status}")
+    st.markdown(warning_beep_html(), unsafe_allow_html=True)
+    st.markdown('<div style="font-weight:700;font-size:15px;margin-top:-8px;">🔊 WARNING SOUND: CRITICAL ALARM BEEP</div>', unsafe_allow_html=True)
+elif severity == "WARNING":
+    st.warning(f"⚠️ WARNING: {status}")
+    st.markdown(warning_beep_html(), unsafe_allow_html=True)
+    st.markdown(f'<div style="font-weight:700;font-size:15px;margin-top:-8px;">🔊 WARNING SOUND: {status}</div>', unsafe_allow_html=True)
+else:
+    st.success("✅ SYSTEM STATUS: NORMAL OPERATION")
+
+# ============================================================
+# SIMULATION PROCESS TRENDS (IDENTICAL TO PAGE 1)
+# ============================================================
+st.markdown('<div class="section-title">📈 SIMULATION PROCESS TRENDS</div>', unsafe_allow_html=True)
+
+df_hist = pd.DataFrame(st.session_state.test_history)
+
+if len(df_hist) >= 2:
+    x = pd.to_datetime(df_hist["Time"])
     g1, g2 = st.columns(2)
+
     with g1:
         fig, ax = plt.subplots(figsize=(6, 3.5))
         fig.patch.set_facecolor('#040e18')
         ax.set_facecolor('#040e18')
-        ax.plot(x, hist["temp"], color="#ff7b26", linewidth=2, label="PT100")
-        ax.axhline(TEMP_NORMAL_MAX, color="#ffd166", linestyle="--", label=f"Normal max ({TEMP_NORMAL_MAX}°C)")
-        ax.axhline(TEMP_HIGH, color="#ff6868", linestyle="--", label=f"Fault limit ({TEMP_HIGH}°C)")
-        ax.set_ylabel("°C", color="#89a8b8")
+        ax.plot(x, df_hist["PT100 (°C)"], color="#ff7b26", linewidth=2, label="PT100")
+        ax.axhline(TEMP_NORMAL_MAX, color="#ffd166", linestyle="--", label="Normal upper limit")
+        ax.axhline(TEMP_HIGH, color="#ff6868", linestyle="--", label="Fault limit")
         ax.set_title("Simulated Temperature", color="#9eefff")
+        ax.set_ylabel("°C", color="#89a8b8")
         ax.tick_params(colors="#89a8b8")
         ax.grid(True, color="#122533", linestyle=":")
         ax.legend(facecolor='#030d17', edgecolor='#4bdcff', labelcolor='#ffffff', fontsize=8)
@@ -864,14 +1582,15 @@ if not hist.empty:
         fig.tight_layout()
         st.pyplot(fig, use_container_width=True)
         plt.close(fig)
+
     with g2:
         fig, ax = plt.subplots(figsize=(6, 3.5))
         fig.patch.set_facecolor('#040e18')
         ax.set_facecolor('#040e18')
-        ax.plot(x, hist["flow"], color="#46e7ff", linewidth=2, label="YF-S201")
-        ax.axhline(FLOW_LOW, color="#ff6868", linestyle="--", label=f"Low-flow limit ({FLOW_LOW} L/min)")
+        ax.plot(x, df_hist["Flow (L/min)"], color="#46e7ff", linewidth=2, label="YF-S201")
+        ax.axhline(FLOW_LOW, color="#ff6868", linestyle="--", label="Low-flow limit")
+        ax.set_title("Simulated Water Flow", color="#9eefff")
         ax.set_ylabel("L/min", color="#89a8b8")
-        ax.set_title("Simulated Flow", color="#9eefff")
         ax.tick_params(colors="#89a8b8")
         ax.grid(True, color="#122533", linestyle=":")
         ax.legend(facecolor='#030d17', edgecolor='#4bdcff', labelcolor='#ffffff', fontsize=8)
@@ -879,15 +1598,28 @@ if not hist.empty:
         fig.tight_layout()
         st.pyplot(fig, use_container_width=True)
         plt.close(fig)
-
-    st.dataframe(hist.tail(30), use_container_width=True)
-    st.download_button(
-        "⬇️ Download Testing Log",
-        hist.to_csv(index=False).encode("utf-8"),
-        "boiler_testing_simulation_log.csv",
-        "text/csv"
-    )
 else:
-    st.info("Run a test to create simulation history.")
+    st.info("Collecting simulated sensor history points...")
 
-st.markdown('<div style="text-align:center;color:#6f8997;padding:24px">AI-BASED BOILER PREDICTIVE FAULT DETECTION<br>SENSOR FUSION • PT100 • YF-S201 • TESTO 872<br><br>TESTING / SIMULATION MODE</div>', unsafe_allow_html=True)
+# ============================================================
+# ENGINEERING DATA (IDENTICAL TO PAGE 1)
+# ============================================================
+with st.expander("📋 Engineering Data / Simulation Log"):
+    st.dataframe(df_hist.tail(30), use_container_width=True)
+    st.download_button(
+        "⬇️ Download Simulation Log (CSV)",
+        data=df_hist.to_csv(index=False).encode("utf-8"),
+        file_name="boiler_simulation_log.csv",
+        mime="text/csv"
+    )
+
+# ============================================================
+# FOOTER (IDENTICAL TO PAGE 1)
+# ============================================================
+st.markdown("""
+<div class="footer">
+AI-BASED BOILER PREDICTIVE FAULT DETECTION<br>
+SENSOR FUSION • PT100 • YF-S201 • TESTO 872 THERMAL IMAGING<br><br>
+TESTING & SIMULATION ENVIRONMENT &nbsp; | &nbsp; MENTOR: N INDHU &nbsp; | &nbsp; RUJITH RS • SANJUSRINITHA T • RHOGETHRAM S T
+</div>
+""", unsafe_allow_html=True)
