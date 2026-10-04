@@ -1757,6 +1757,21 @@ st.sidebar.page_link("dashboard.py", label="🏭 Live Monitoring", icon="🏭")
 st.sidebar.page_link("pages/2_Testing_Simulation.py", label="🧪 Testing / Simulation", icon="🧪")
 st.sidebar.markdown("---")
 
+cur_theme = st.session_state.get("theme_mode", "dark")
+sb_theme = st.sidebar.segmented_control(
+    "🎨 Dashboard Theme",
+    options=["🌙 Dark", "☀️ Light"],
+    default="🌙 Dark" if cur_theme == "dark" else "☀️ Light",
+    key=f"sb_theme_ctrl_{cur_theme}"
+)
+if sb_theme:
+    chosen = "light" if "Light" in sb_theme else "dark"
+    if chosen != cur_theme:
+        st.session_state.theme_mode = chosen
+        st.rerun()
+
+st.sidebar.markdown("---")
+
 st.sidebar.header("⚙️ SIMULATION CONFIGURATION")
 st.sidebar.caption("Offline Digital Twin Mode: Inject manual sensor readings without physical hardware.")
 st.sidebar.markdown("---")
