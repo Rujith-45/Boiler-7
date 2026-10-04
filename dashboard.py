@@ -1196,6 +1196,54 @@ st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("🔄 Auto Refresh", value=True)
 
 
+
+# ============================================================
+# TOP BAR (WITH LIGHT / DARK MODE IN RIGHT CORNER)
+# ============================================================
+clock = datetime.now().strftime("%H:%M:%S")
+
+top_col1, top_col2 = st.columns([3.85, 1.15], vertical_alignment="center")
+
+with top_col1:
+    st.markdown(f'''
+    <div class="topbar">
+        <div class="brand">🔥 <span>BOILER AI</span> / CONTROL & DIAGNOSTICS</div>
+        <div>{clock}</div>
+    </div>
+    ''', unsafe_allow_html=True)
+
+with top_col2:
+    cur_theme = st.session_state.get("theme_mode", "dark")
+    mode_selection = st.segmented_control(
+        "Theme Mode",
+        options=["🌙 Dark", "☀️ Light"],
+        default="🌙 Dark" if cur_theme == "dark" else "☀️ Light",
+        key=f"dash_theme_ctrl_{cur_theme}",
+        label_visibility="collapsed"
+    )
+    if mode_selection:
+        chosen = "light" if "Light" in mode_selection else "dark"
+        if chosen != cur_theme:
+            st.session_state.theme_mode = chosen
+            st.rerun()
+
+st.markdown('''
+<div class="hero">
+    <div class="hero-title">AI-BASED <span>BOILER</span> PREDICTIVE FAULT DETECTION</div>
+    <div class="hero-sub">Professional process monitoring • Thermal image analysis • Sensor fusion</div>
+    <div class="team-line">MENTOR: <b>N INDHU</b> &nbsp; | &nbsp; MENTEES: <b>RUJITH RS</b> • <b>SANJUSRINITHA T</b> • <b>RHOGETHRAM S T</b></div>
+</div>
+''', unsafe_allow_html=True)
+
+# ============================================================
+# PAGE NAVIGATION BAR (MAIN SCREEN)
+# ============================================================
+nav_c1, nav_c2 = st.columns([1, 1])
+with nav_c1:
+    st.page_link("dashboard.py", label="🏭 LIVE MONITORING (ACTIVE)", icon="🏭", disabled=True)
+with nav_c2:
+    st.page_link("pages/2_Testing_Simulation.py", label="🧪 TESTING / SIMULATION MODE ➜", icon="🧪")
+
 # ============================================================
 # TESTO BMT RADIOMETRIC PARSER
 # Based on Testo's public read_bmt sample for 865/868/871/872/883.
@@ -1576,7 +1624,6 @@ def get_data():
     except Exception:
         return 0.0, 0.0, 0.0, False
 
-flow, temp, total, connected = get_data()
 
 # ============================================================
 # SENSOR FUSION
@@ -1836,638 +1883,595 @@ def get_parameter_states(f, t, total_water):
     )
     return temp_state, flow_state, water_state
 
-# BMT thermal state
-thermal_tmax = None
-thermal_hotspot = False
-bmt_result = st.session_state.get("bmt_result")
-if bmt_result is not None:
-    try:
-        bmt_stats = bmt_summary(bmt_result)
-        thermal_tmax = bmt_stats["tmax"]
-        thermal_hotspot = thermal_tmax >= TEMP_HIGH
-    except Exception:
-        bmt_stats = None
 
-status, severity = sensor_fusion(flow, temp, thermal_tmax, thermal_hotspot, total)
-
-# ============================================================
-# TOP BAR (WITH LIGHT / DARK MODE IN RIGHT CORNER)
-# ============================================================
-clock = datetime.now().strftime("%H:%M:%S")
-connection = (
-    '<span class="online">● SYSTEM ONLINE</span>'
-    if connected else
-    '<span class="offline">● STM32 OFFLINE</span>'
-)
-
-top_col1, top_col2 = st.columns([3.85, 1.15], vertical_alignment="center")
-
-with top_col1:
-    st.markdown(f"""
-    <div class="topbar">
-        <div class="brand">🔥 <span>BOILER AI</span> / CONTROL & DIAGNOSTICS</div>
-        <div>{connection} &nbsp; | &nbsp; {clock}</div>
+@st.fragment(run_every=2 if auto_refresh else None)
+def render_live_monitoring():
+    flow, temp, total, connected = get_data()
+    # BMT thermal state
+    thermal_tmax = None
+    thermal_hotspot = False
+    bmt_result = st.session_state.get("bmt_result")
+    if bmt_result is not None:
+        try:
+            bmt_stats = bmt_summary(bmt_result)
+            thermal_tmax = bmt_stats["tmax"]
+            thermal_hotspot = thermal_tmax >= TEMP_HIGH
+        except Exception:
+            bmt_stats = None
+    
+    status, severity = sensor_fusion(flow, temp, thermal_tmax, thermal_hotspot, total)
+    
+    # MAIN PROCESS VISUALIZATION
+    # ============================================================
+    st.markdown('<div class="section-title">LIVE PROCESS OVERVIEW</div>', unsafe_allow_html=True)
+    
+    left, middle, right = st.columns([1.0, 1.55, 1.0])
+    
+    with left:
+        st.markdown("""
+    <div class="panel">
+    <div class="panel-head">PROCESS INPUTS</div>
+    <div class="param">
+    <div class="param-name">YF-S201 FLOW</div>
+    <div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">L/min</span></div>
+    </div>
+    <div class="param">
+    <div class="param-name">PT100 TEMPERATURE</div>
+    <div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">°C</span></div>
+    </div>
+    <div class="param">
+    <div class="param-name">TOTAL WATER</div>
+    <div class="param-value">%.3f <span style="font-size:13px;color:#7795a5;">L</span></div>
+    </div>
+    </div>
+    """ % (flow, temp, total), unsafe_allow_html=True)
+    
+    with middle:
+        st.markdown("""
+    <div class="panel">
+    <div class="panel-head">DIGITAL BOILER MODEL</div>
+    <div class="boiler-area">
+        <div class="pipe-left"></div>
+        <div class="pipe-right"></div>
+        <div class="flow-arrow">➜</div>
+        <div class="boiler-body">
+            <div class="dome"></div>
+            <div class="thermal-zone"></div>
+            <div class="sensor-dot pt100"></div>
+            <div class="sensor-dot flow"></div>
+            <div class="sensor-dot thermal"></div>
+            <div class="water"><div class="wave"></div></div>
+            <div class="heater"></div>
+        </div>
+    </div>
     </div>
     """, unsafe_allow_html=True)
-
-with top_col2:
-    cur_theme = st.session_state.get("theme_mode", "dark")
-    st.segmented_control(
-        "Theme Mode",
-        options=["🌙 Dark", "☀️ Light"],
-        default="🌙 Dark" if cur_theme == "dark" else "☀️ Light",
-        key="global_theme_switcher",
-        on_change=on_theme_change,
-        label_visibility="collapsed"
-    )
-
-st.markdown(f"""
-<div class="hero">
-    <div class="hero-title">AI-BASED <span>BOILER</span> PREDICTIVE FAULT DETECTION</div>
-    <div class="hero-sub">Professional process monitoring • Thermal image analysis • Sensor fusion</div>
-    <div class="team-line">MENTOR: <b>N INDHU</b> &nbsp; | &nbsp; MENTEES: <b>RUJITH RS</b> • <b>SANJUSRINITHA T</b> • <b>RHOGETHRAM S T</b></div>
-</div>
-""", unsafe_allow_html=True)
-
-# ============================================================
-# PAGE NAVIGATION BAR (MAIN SCREEN)
-# ============================================================
-nav_c1, nav_c2 = st.columns([1, 1])
-with nav_c1:
-    st.page_link("dashboard.py", label="🏭 LIVE MONITORING (ACTIVE)", icon="🏭", disabled=True)
-with nav_c2:
-    st.page_link("pages/2_Testing_Simulation.py", label="🧪 TESTING / SIMULATION MODE ➜", icon="🧪")
-
-
-# ============================================================
-# MAIN PROCESS VISUALIZATION
-# ============================================================
-st.markdown('<div class="section-title">LIVE PROCESS OVERVIEW</div>', unsafe_allow_html=True)
-
-left, middle, right = st.columns([1.0, 1.55, 1.0])
-
-with left:
-    st.markdown("""
-<div class="panel">
-<div class="panel-head">PROCESS INPUTS</div>
-<div class="param">
-<div class="param-name">YF-S201 FLOW</div>
-<div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">L/min</span></div>
-</div>
-<div class="param">
-<div class="param-name">PT100 TEMPERATURE</div>
-<div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">°C</span></div>
-</div>
-<div class="param">
-<div class="param-name">TOTAL WATER</div>
-<div class="param-value">%.3f <span style="font-size:13px;color:#7795a5;">L</span></div>
-</div>
-</div>
-""" % (flow, temp, total), unsafe_allow_html=True)
-
-with middle:
-    st.markdown("""
-<div class="panel">
-<div class="panel-head">DIGITAL BOILER MODEL</div>
-<div class="boiler-area">
-    <div class="pipe-left"></div>
-    <div class="pipe-right"></div>
-    <div class="flow-arrow">➜</div>
-    <div class="boiler-body">
-        <div class="dome"></div>
-        <div class="thermal-zone"></div>
-        <div class="sensor-dot pt100"></div>
-        <div class="sensor-dot flow"></div>
-        <div class="sensor-dot thermal"></div>
-        <div class="water"><div class="wave"></div></div>
-        <div class="heater"></div>
-    </div>
-</div>
-</div>
-""", unsafe_allow_html=True)
-
-with right:
-    health_text = "94%"
-    health_message = "NORMAL" if severity == "NORMAL" else severity
-
-    st.markdown(f"""
-<div class="panel health">
-<div class="panel-head">AI HEALTH INDEX</div>
-<div class="health-circle"><div class="health-inner">{health_text}</div></div>
-<div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;">{health_message}</div>
-<div style="color:#7894a5;margin-top:7px;font-size:13px;">Sensor-fusion assessment</div>
-</div>
-""", unsafe_allow_html=True)
-
-# ============================================================
-# THRESHOLD MONITOR
-# ============================================================
-st.markdown('<div class="section-title">THRESHOLD MONITORING</div>', unsafe_allow_html=True)
-
-t1, t2, t3 = st.columns(3)
-
-with t1:
-    temp_state = (
-        "CRITICAL" if temp >= TEMP_HIGH
-        else "HIGH" if temp > TEMP_NORMAL_MAX
-        else "LOW" if temp < TEMP_LOW
-        else "NORMAL"
-    )
-    temp_color = (
-        "#ff5555" if temp_state in ("LOW", "CRITICAL")
-        else "#ffd66b" if temp_state == "HIGH"
-        else "#63ffc0"
-    )
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">🌡️ TEMPERATURE</div>
-<div class="range-box"><div class="range-title">CURRENT</div><div class="range-value">{temp:.2f} °C</div></div>
-<div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">{TEMP_LOW:.0f} – {TEMP_NORMAL_MAX:.0f} °C</div></div>
-<div class="range-box"><div class="range-title">FAULT LIMIT</div><div class="range-value" style="color:{temp_color};">{TEMP_HIGH:.0f} °C • {temp_state}</div></div>
-</div>
-""", unsafe_allow_html=True)
-
-with t2:
-    flow_state = (
-        "LOW" if flow < FLOW_LOW
-        else "HIGH" if flow > FLOW_NORMAL_MAX
-        else "NORMAL"
-    )
-    flow_color = "#ff7777" if flow_state == "LOW" else "#63ffc0"
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">💧 FLOW</div>
-<div class="range-box"><div class="range-title">CURRENT</div><div class="range-value">{flow:.2f} L/min</div></div>
-<div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">{FLOW_LOW:.2f} – {FLOW_NORMAL_MAX:.2f} L/min</div></div>
-<div class="range-box"><div class="range-title">STATUS</div><div class="range-value" style="color:{flow_color};">{flow_state}</div></div>
-</div>
-""", unsafe_allow_html=True)
-
-with t3:
-    water_state = (
-        "LOW" if total < 0.50
-        else "HIGH" if total > 5.00
-        else "NORMAL"
-    )
-    water_color = "#ff5555" if water_state != "NORMAL" else "#63ffc0"
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">💧 TOTAL WATER</div>
-<div class="range-box"><div class="range-title">CURRENT TOTAL</div><div class="range-value">{total:.3f} L</div></div>
-<div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">0.50 – 5.00 L</div></div>
-<div class="range-box"><div class="range-title">STATUS</div><div class="range-value" style="color:{water_color};">{water_state}</div></div>
-</div>
-""", unsafe_allow_html=True)
-
-# ============================================================
-# FUSION ENGINE
-# ============================================================
-st.markdown('<div class="section-title">🧠 SENSOR FUSION & FAULT DIAGNOSTICS</div>', unsafe_allow_html=True)
-
-f1, f2, f3 = st.columns(3)
-
-with f1:
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">FLOW CHANNEL</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>YF-S201</span><b style="color:{'#63ffc0' if flow_state == 'NORMAL' else '#ff7777'};">{flow_state}</b>
-</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>Threshold</span><b>{FLOW_LOW:.2f} L/min</b>
-</div>
-</div>
-""", unsafe_allow_html=True)
-
-with f2:
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">TEMPERATURE CHANNEL</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>PT100</span><b style="color:{'#ff5555' if temp_state in ('LOW', 'CRITICAL') else '#ffd66b' if temp_state == 'HIGH' else '#63ffc0'};">{temp:.2f} °C • {temp_state}</b>
-</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>Limit</span><b>{TEMP_HIGH:.0f} °C</b>
-</div>
-</div>
-""", unsafe_allow_html=True)
-
-with f3:
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">THERMAL CHANNEL • TESTO 872 BMT</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>Testo 872</span><b style="color:{'#63ffc0' if thermal_tmax is not None else '#ffd66b'};">
-{'BMT LOADED' if thermal_tmax is not None else 'WAITING'}
-</b>
-</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>Radiometric Tmax</span><b>{f"{thermal_tmax:.2f} °C" if thermal_tmax is not None else "-- °C"}</b>
-</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>Hotspot</span><b>{f"X={bmt_stats['hot_x']}, Y={bmt_stats['hot_y']}" if bmt_result is not None and bmt_stats else "--"}</b>
-</div>
-</div>
-""", unsafe_allow_html=True)
-
-# BMT uploader sits directly under the fusion channel.
-st.markdown('<div class="section-title">📁 TESTO 872 RADIOMETRIC BMT INPUT</div>', unsafe_allow_html=True)
-bu1, bu2 = st.columns([1.2, 1.0])
-
-with bu1:
-    bmt_file = st.file_uploader(
-        "Upload Testo 872 .BMT file — BMT only",
-        type=["bmt"],
-        key="testo_bmt_upload",
-        help="Upload the BMT captured by the Testo 872. The dashboard reads the radiometric temperature matrix from the BMT."
-    )
-
-    if bmt_file is not None:
-        try:
-            result = parse_testo_bmt(bmt_file.getvalue())
-            stats = bmt_summary(result)
-            st.session_state.bmt_result = result
-            st.session_state.bmt_name = bmt_file.name
-            st.success(f"Loaded: {bmt_file.name}")
-        except Exception as e:
-            st.session_state.bmt_result = None
-            st.session_state.bmt_name = ""
-            st.error(f"BMT parsing failed: {e}")
-
-with bu2:
-    if st.session_state.bmt_result is not None:
-        result = st.session_state.bmt_result
-        stats = bmt_summary(result)
-
+    
+    with right:
+        health_text = "94%"
+        health_message = "NORMAL" if severity == "NORMAL" else severity
+    
         st.markdown(f"""
-<div class="panel">
-<div class="panel-head">RADIOMETRIC RESULTS</div>
-<div class="param"><div class="param-name">FILE</div>
-<div style="color:#eafaff;font-size:13px;">{st.session_state.bmt_name}</div></div>
-<div class="param"><div class="param-name">TMAX</div>
-<div class="param-value">{stats["tmax"]:.2f} °C</div></div>
-<div class="param"><div class="param-name">TMIN</div>
-<div class="param-value">{stats["tmin"]:.2f} °C</div></div>
-<div class="param"><div class="param-name">AVERAGE</div>
-<div class="param-value">{stats["tavg"]:.2f} °C</div></div>
-<div class="param"><div class="param-name">HOTSPOT PIXEL</div>
-<div style="color:#eafaff;font-size:16px;">X={stats["hot_x"]}, Y={stats["hot_y"]}</div></div>
-</div>
-""", unsafe_allow_html=True)
-
-        # ============================================================
-        # DUAL IMAGE DISPLAY
-        # 1) Real/visible image embedded in the BMT
-        # 2) Radiometric thermal image generated from the BMT IR matrix
-        # ============================================================
-        st.markdown(
-            '<div class="section-title">📷 REAL IMAGE + 🌡️ THERMAL IMAGE</div>',
-            unsafe_allow_html=True
+    <div class="panel health">
+    <div class="panel-head">AI HEALTH INDEX</div>
+    <div class="health-circle"><div class="health-inner">{health_text}</div></div>
+    <div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;">{health_message}</div>
+    <div style="color:#7894a5;margin-top:7px;font-size:13px;">Sensor-fusion assessment</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ============================================================
+    # THRESHOLD MONITOR
+    # ============================================================
+    st.markdown('<div class="section-title">THRESHOLD MONITORING</div>', unsafe_allow_html=True)
+    
+    t1, t2, t3 = st.columns(3)
+    
+    with t1:
+        temp_state = (
+            "CRITICAL" if temp >= TEMP_HIGH
+            else "HIGH" if temp > TEMP_NORMAL_MAX
+            else "LOW" if temp < TEMP_LOW
+            else "NORMAL"
         )
-
-        img1, img2 = st.columns(2)
-
-        with img1:
+        temp_color = (
+            "#ff5555" if temp_state in ("LOW", "CRITICAL")
+            else "#ffd66b" if temp_state == "HIGH"
+            else "#63ffc0"
+        )
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">🌡️ TEMPERATURE</div>
+    <div class="range-box"><div class="range-title">CURRENT</div><div class="range-value">{temp:.2f} °C</div></div>
+    <div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">{TEMP_LOW:.0f} – {TEMP_NORMAL_MAX:.0f} °C</div></div>
+    <div class="range-box"><div class="range-title">FAULT LIMIT</div><div class="range-value" style="color:{temp_color};">{TEMP_HIGH:.0f} °C • {temp_state}</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with t2:
+        flow_state = (
+            "LOW" if flow < FLOW_LOW
+            else "HIGH" if flow > FLOW_NORMAL_MAX
+            else "NORMAL"
+        )
+        flow_color = "#ff7777" if flow_state == "LOW" else "#63ffc0"
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">💧 FLOW</div>
+    <div class="range-box"><div class="range-title">CURRENT</div><div class="range-value">{flow:.2f} L/min</div></div>
+    <div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">{FLOW_LOW:.2f} – {FLOW_NORMAL_MAX:.2f} L/min</div></div>
+    <div class="range-box"><div class="range-title">STATUS</div><div class="range-value" style="color:{flow_color};">{flow_state}</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with t3:
+        water_state = (
+            "LOW" if total < 0.50
+            else "HIGH" if total > 5.00
+            else "NORMAL"
+        )
+        water_color = "#ff5555" if water_state != "NORMAL" else "#63ffc0"
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">💧 TOTAL WATER</div>
+    <div class="range-box"><div class="range-title">CURRENT TOTAL</div><div class="range-value">{total:.3f} L</div></div>
+    <div class="range-box"><div class="range-title">OPERATING RANGE</div><div class="range-value">0.50 – 5.00 L</div></div>
+    <div class="range-box"><div class="range-title">STATUS</div><div class="range-value" style="color:{water_color};">{water_state}</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ============================================================
+    # FUSION ENGINE
+    # ============================================================
+    st.markdown('<div class="section-title">🧠 SENSOR FUSION & FAULT DIAGNOSTICS</div>', unsafe_allow_html=True)
+    
+    f1, f2, f3 = st.columns(3)
+    
+    with f1:
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">FLOW CHANNEL</div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+    <span>YF-S201</span><b style="color:{'#63ffc0' if flow_state == 'NORMAL' else '#ff7777'};">{flow_state}</b>
+    </div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+    <span>Threshold</span><b>{FLOW_LOW:.2f} L/min</b>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with f2:
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">TEMPERATURE CHANNEL</div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+    <span>PT100</span><b style="color:{'#ff5555' if temp_state in ('LOW', 'CRITICAL') else '#ffd66b' if temp_state == 'HIGH' else '#63ffc0'};">{temp:.2f} °C • {temp_state}</b>
+    </div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+    <span>Limit</span><b>{TEMP_HIGH:.0f} °C</b>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with f3:
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">THERMAL CHANNEL • TESTO 872 BMT</div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+    <span>Testo 872</span><b style="color:{'#63ffc0' if thermal_tmax is not None else '#ffd66b'};">
+    {'BMT LOADED' if thermal_tmax is not None else 'WAITING'}
+    </b>
+    </div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+    <span>Radiometric Tmax</span><b>{f"{thermal_tmax:.2f} °C" if thermal_tmax is not None else "-- °C"}</b>
+    </div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
+    <span>Hotspot</span><b>{f"X={bmt_stats['hot_x']}, Y={bmt_stats['hot_y']}" if bmt_result is not None and bmt_stats else "--"}</b>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # BMT uploader sits directly under the fusion channel.
+    st.markdown('<div class="section-title">📁 TESTO 872 RADIOMETRIC BMT INPUT</div>', unsafe_allow_html=True)
+    bu1, bu2 = st.columns([1.2, 1.0])
+    
+    with bu1:
+        bmt_file = st.file_uploader(
+            "Upload Testo 872 .BMT file — BMT only",
+            type=["bmt"],
+            key="testo_bmt_upload",
+            help="Upload the BMT captured by the Testo 872. The dashboard reads the radiometric temperature matrix from the BMT."
+        )
+    
+        if bmt_file is not None:
+            try:
+                result = parse_testo_bmt(bmt_file.getvalue())
+                stats = bmt_summary(result)
+                st.session_state.bmt_result = result
+                st.session_state.bmt_name = bmt_file.name
+                st.success(f"Loaded: {bmt_file.name}")
+            except Exception as e:
+                st.session_state.bmt_result = None
+                st.session_state.bmt_name = ""
+                st.error(f"BMT parsing failed: {e}")
+    
+    with bu2:
+        if st.session_state.bmt_result is not None:
+            result = st.session_state.bmt_result
+            stats = bmt_summary(result)
+    
+            st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">RADIOMETRIC RESULTS</div>
+    <div class="param"><div class="param-name">FILE</div>
+    <div style="color:#eafaff;font-size:13px;">{st.session_state.bmt_name}</div></div>
+    <div class="param"><div class="param-name">TMAX</div>
+    <div class="param-value">{stats["tmax"]:.2f} °C</div></div>
+    <div class="param"><div class="param-name">TMIN</div>
+    <div class="param-value">{stats["tmin"]:.2f} °C</div></div>
+    <div class="param"><div class="param-name">AVERAGE</div>
+    <div class="param-value">{stats["tavg"]:.2f} °C</div></div>
+    <div class="param"><div class="param-name">HOTSPOT PIXEL</div>
+    <div style="color:#eafaff;font-size:16px;">X={stats["hot_x"]}, Y={stats["hot_y"]}</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+            # ============================================================
+            # DUAL IMAGE DISPLAY
+            # 1) Real/visible image embedded in the BMT
+            # 2) Radiometric thermal image generated from the BMT IR matrix
+            # ============================================================
             st.markdown(
-                '<div class="panel"><div class="panel-head">📷 REAL / VISIBLE IMAGE</div>',
+                '<div class="section-title">📷 REAL IMAGE + 🌡️ THERMAL IMAGE</div>',
                 unsafe_allow_html=True
             )
-            if result.get("visual_jpeg"):
+    
+            img1, img2 = st.columns(2)
+    
+            with img1:
+                st.markdown(
+                    '<div class="panel"><div class="panel-head">📷 REAL / VISIBLE IMAGE</div>',
+                    unsafe_allow_html=True
+                )
+                if result.get("visual_jpeg"):
+                    try:
+                        vis = Image.open(io.BytesIO(result["visual_jpeg"]))
+                        st.image(
+                            vis,
+                            caption="Testo 872 visible image from BMT",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.warning(f"Visible image could not be displayed: {e}")
+                else:
+                    st.info(
+                        "This BMT does not contain an embedded visible JPEG. "
+                        "The radiometric thermal image is still available."
+                    )
+                st.markdown("</div>", unsafe_allow_html=True)
+    
+            with img2:
+                st.markdown(
+                    '<div class="panel"><div class="panel-head">🌡️ RADIOMETRIC THERMAL IMAGE</div>',
+                    unsafe_allow_html=True
+                )
                 try:
-                    vis = Image.open(io.BytesIO(result["visual_jpeg"]))
-                    st.image(
-                        vis,
-                        caption="Testo 872 visible image from BMT",
-                        use_container_width=True
+                    thermal_matrix = np.asarray(
+                        result["temperature_matrix"], dtype=float
+                    )
+    
+                    fig, ax = plt.subplots(figsize=(6, 4.5))
+                    im = ax.imshow(
+                        thermal_matrix,
+                        cmap="inferno",
+                        interpolation="nearest"
+                    )
+                    ax.set_title(
+                        f"Testo 872 Thermal Map | Tmax {stats['tmax']:.2f} °C"
+                    )
+                    ax.set_xlabel("Pixel X")
+                    ax.set_ylabel("Pixel Y")
+    
+                    # Mark the hottest pixel.
+                    ax.plot(
+                        stats["hot_x"],
+                        stats["hot_y"],
+                        marker="x",
+                        markersize=12,
+                        markeredgewidth=2
+                    )
+                    ax.text(
+                        stats["hot_x"] + 5,
+                        stats["hot_y"] + 5,
+                        f"Tmax {stats['tmax']:.1f}°C",
+                        fontsize=9
+                    )
+    
+                    cbar = fig.colorbar(im, ax=ax)
+                    cbar.set_label("Temperature (°C)")
+                    fig.tight_layout()
+                    st.pyplot(fig, use_container_width=True)
+                    plt.close(fig)
+    
+                    st.caption(
+                        "Thermal image is reconstructed directly from the "
+                        "radiometric temperature matrix stored in the BMT."
                     )
                 except Exception as e:
-                    st.warning(f"Visible image could not be displayed: {e}")
-            else:
-                st.info(
-                    "This BMT does not contain an embedded visible JPEG. "
-                    "The radiometric thermal image is still available."
-                )
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        with img2:
+                    st.error(f"Thermal image generation failed: {e}")
+    
+                st.markdown("</div>", unsafe_allow_html=True)
+    
+            # Radiometric matrix download
+            matrix = result["temperature_matrix"]
+            csv_buf = io.StringIO()
+            np.savetxt(csv_buf, matrix, delimiter=",", fmt="%.3f")
+            st.download_button(
+                "⬇️ Download Radiometric Temperature Matrix (CSV)",
+                data=csv_buf.getvalue().encode("utf-8"),
+                file_name="testo_872_radiometric_temperature.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("Upload a Testo 872 BMT file to obtain the real radiometric Tmax, Tmin and average temperature.")
+    
+    
+    
+    # ============================================================
+    # THERMOGRAPHY VIDEO INPUT
+    # ============================================================
+    st.markdown(
+        '<div class="section-title">🎥 THERMOGRAPHY VIDEO INPUT</div>',
+        unsafe_allow_html=True
+    )
+    
+    v1, v2 = st.columns([1.05, 1.0])
+    
+    with v1:
+        thermo_video = st.file_uploader(
+            "Upload thermography video",
+            type=["mp4", "avi", "mov", "mkv", "webm"],
+            key="thermography_video_upload",
+            help="Upload a recorded thermography/thermal video for visual review."
+        )
+    
+        if thermo_video is not None:
+            video_bytes = thermo_video.getvalue()
+            st.session_state.thermography_video_name = thermo_video.name
             st.markdown(
-                '<div class="panel"><div class="panel-head">🌡️ RADIOMETRIC THERMAL IMAGE</div>',
+                """
+                <div style="max-width:560px;margin:0 auto;">
+                """,
                 unsafe_allow_html=True
             )
-            try:
-                thermal_matrix = np.asarray(
-                    result["temperature_matrix"], dtype=float
-                )
-
-                fig, ax = plt.subplots(figsize=(6, 4.5))
-                im = ax.imshow(
-                    thermal_matrix,
-                    cmap="inferno",
-                    interpolation="nearest"
-                )
-                ax.set_title(
-                    f"Testo 872 Thermal Map | Tmax {stats['tmax']:.2f} °C"
-                )
-                ax.set_xlabel("Pixel X")
-                ax.set_ylabel("Pixel Y")
-
-                # Mark the hottest pixel.
-                ax.plot(
-                    stats["hot_x"],
-                    stats["hot_y"],
-                    marker="x",
-                    markersize=12,
-                    markeredgewidth=2
-                )
-                ax.text(
-                    stats["hot_x"] + 5,
-                    stats["hot_y"] + 5,
-                    f"Tmax {stats['tmax']:.1f}°C",
-                    fontsize=9
-                )
-
-                cbar = fig.colorbar(im, ax=ax)
-                cbar.set_label("Temperature (°C)")
-                fig.tight_layout()
-                st.pyplot(fig, use_container_width=True)
-                plt.close(fig)
-
-                st.caption(
-                    "Thermal image is reconstructed directly from the "
-                    "radiometric temperature matrix stored in the BMT."
-                )
-            except Exception as e:
-                st.error(f"Thermal image generation failed: {e}")
-
+            st.video(video_bytes)
             st.markdown("</div>", unsafe_allow_html=True)
-
-        # Radiometric matrix download
-        matrix = result["temperature_matrix"]
-        csv_buf = io.StringIO()
-        np.savetxt(csv_buf, matrix, delimiter=",", fmt="%.3f")
+            st.success(f"Thermography video loaded: {thermo_video.name}")
+    
+    with v2:
+        if thermo_video is not None:
+            st.markdown(
+                f"""
+                <div class="panel">
+                <div class="panel-head">THERMOGRAPHY VIDEO STATUS</div>
+                <div class="param">
+                    <div class="param-name">FILE</div>
+                    <div style="color:#eafaff;font-size:13px;">{thermo_video.name}</div>
+                </div>
+                <div class="param">
+                    <div class="param-name">INPUT TYPE</div>
+                    <div class="param-value">THERMOGRAPHY VIDEO</div>
+                </div>
+                <div class="param">
+                    <div class="param-name">USE</div>
+                    <div style="color:#b8cbd5;font-size:14px;line-height:1.5;">
+                        Visual thermal-video review alongside the Testo 872 BMT
+                        radiometric analysis and STM32 sensor-fusion results.
+                    </div>
+                </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            st.info(
+                "The uploaded video is displayed for thermography review. "
+                "The fault diagnosis continues to use PT100, YF-S201, total water "
+                "and radiometric Testo 872 BMT data."
+            )
+        else:
+            st.markdown(
+                """
+                <div class="panel">
+                <div class="panel-head">THERMOGRAPHY VIDEO STATUS</div>
+                <div style="color:#8faabb;padding:20px 0;">
+                    No thermography video uploaded.
+                </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+    
+    
+    # ============================================================
+    # FAULT ANALYSIS / SENSOR FUSION CONCLUSION
+    # ============================================================
+    thermal_text = f"{thermal_tmax:.2f} °C" if thermal_tmax is not None else "Not available"
+    
+    if thermal_tmax is None:
+        analysis_text = (
+            "Thermal evidence is not yet available. Upload a Testo 872 BMT file to combine "
+            "the radiometric thermal image with the PT100 and YF-S201 measurements."
+        )
+    temp_state, flow_state, water_state = get_parameter_states(flow, temp, total)
+    
+    if thermal_tmax is None:
+        thermal_for_text = "not available"
+    else:
+        thermal_for_text = f"{thermal_tmax:.2f} °C"
+    
+    if severity == "CRITICAL":
+        analysis_text = (
+            f"Rule-based sensor fusion detected {status}. "
+            f"PT100 is {temp_state} ({temp:.2f} °C), YF-S201 flow is {flow_state} "
+            f"({flow:.2f} L/min), total water is {water_state} ({total:.3f} L), "
+            f"and Testo 872 Tmax is {thermal_for_text}. "
+            "Multiple sensor conditions agree with the diagnosed fault."
+        )
+    elif severity == "WARNING":
+        analysis_text = (
+            f"Rule-based sensor fusion detected {status}. "
+            f"PT100 is {temp_state} ({temp:.2f} °C), YF-S201 flow is {flow_state} "
+            f"({flow:.2f} L/min), total water is {water_state} ({total:.3f} L), "
+            f"and Testo 872 Tmax is {thermal_for_text}. "
+            "The combination of these measurements indicates a condition that should be checked."
+        )
+    else:
+        analysis_text = (
+            f"No abnormal combination detected. "
+            f"PT100 is {temp_state} ({temp:.2f} °C), YF-S201 flow is {flow_state} "
+            f"({flow:.2f} L/min), total water is {water_state} ({total:.3f} L), "
+            f"and Testo 872 Tmax is {thermal_for_text}."
+        )
+    
+    st.markdown('<div class="section-title">🔎 FAULT ANALYSIS — THERMAL IMAGE + SENSOR FUSION</div>', unsafe_allow_html=True)
+    a1, a2 = st.columns([1.15, 1.0])
+    
+    with a1:
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">WHAT PROBLEM IS DETECTED?</div>
+    <div style="font-size:25px;font-weight:800;margin:8px 0 12px;">{status}</div>
+    <div style="color:#b8cbd5;font-size:14px;line-height:1.65;">{analysis_text}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with a2:
+        st.markdown(f"""
+    <div class="panel">
+    <div class="panel-head">FUSION EVIDENCE</div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>PT100</span><b>{temp:.2f} °C</b></div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>YF-S201 Flow</span><b>{flow:.2f} L/min</b></div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water</span><b>{total:.3f} L</b></div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Testo 872 Tmax</span><b>{thermal_text}</b></div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Temperature State</span><b>{temp_state}</b></div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Flow State</span><b>{flow_state}</b></div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water State</span><b>{water_state}</b></div>
+    <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Fusion Decision</span><b>{severity}</b></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    
+    
+    if severity == "CRITICAL":
+        st.error(f"🚨 CRITICAL FAULT: {status}")
+        st.markdown(warning_beep_html(), unsafe_allow_html=True)
+        st.markdown(
+            '<div style="font-weight:700;font-size:15px;margin-top:-8px;">'
+            '🔊 WARNING SOUND: CRITICAL ALARM BEEP'
+            '</div>',
+            unsafe_allow_html=True
+        )
+    elif severity == "WARNING":
+        st.warning(f"⚠️ WARNING: {status}")
+        st.markdown(warning_beep_html(), unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-weight:700;font-size:15px;margin-top:-8px;">'
+            f'🔊 WARNING SOUND: {status}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+    else:
+        st.success("✅ SYSTEM STATUS: NORMAL OPERATION")
+    
+    st.info(
+        "Testo 872 BMT is the thermal input. The BMT contains the radiometric temperature data; "
+        "the dashboard uses its IR matrix to calculate Tmax, Tmin, average temperature and hotspot position."
+    )
+    
+    # ============================================================
+    # DATA LOG
+    # ============================================================
+    st.session_state.history.append({
+        "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "Flow (L/min)": flow,
+        "PT100 (°C)": temp,
+        "Total Water (L)": total,
+        "Testo Tmax (°C)": thermal_tmax,
+        "Status": status,
+        "Severity": severity
+    })
+    st.session_state.history = st.session_state.history[-1000:]
+    
+    df = pd.DataFrame(st.session_state.history)
+    
+    # ============================================================
+    # TREND CHARTS
+    # ============================================================
+    st.markdown('<div class="section-title">📈 REAL-TIME PROCESS TRENDS</div>', unsafe_allow_html=True)
+    
+    if len(df) >= 2:
+        x = pd.to_datetime(df["Time"])
+        g1, g2 = st.columns(2)
+        is_dark = (st.session_state.get("theme_mode", "dark") == "dark")
+    
+        with g1:
+            fig, ax = plt.subplots(facecolor='#040e18' if is_dark else '#ffffff')
+            ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
+            ax.plot(x, df["PT100 (°C)"], label="PT100", color='#45e7ff' if is_dark else '#0284c7', linewidth=2)
+            ax.axhline(TEMP_NORMAL_MAX, linestyle="--", label="Normal limit", color='#ffd66b' if is_dark else '#d97706')
+            ax.axhline(TEMP_HIGH, linestyle="--", label="Fault limit", color='#ff5555' if is_dark else '#dc2626')
+            ax.set_title("Boiler Temperature", color='#eaf8ff' if is_dark else '#082138', fontweight='bold')
+            ax.set_ylabel("°C", color='#8faabb' if is_dark else '#486581')
+            ax.tick_params(colors='#8faabb' if is_dark else '#486581')
+            ax.grid(True, color='#1e3a5f' if is_dark else '#cbd5e1', linestyle='--', alpha=0.6)
+            for spine in ax.spines.values():
+                spine.set_color('#1e3a5f' if is_dark else '#cbd5e1')
+            leg = ax.legend(facecolor='#06111b' if is_dark else '#ffffff', edgecolor='#1e3a5f' if is_dark else '#cbd5e1')
+            for text in leg.get_texts():
+                text.set_color('#eaf8ff' if is_dark else '#082138')
+            plt.xticks(rotation=30)
+            st.pyplot(fig)
+            plt.close(fig)
+    
+        with g2:
+            fig, ax = plt.subplots(facecolor='#040e18' if is_dark else '#ffffff')
+            ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
+            ax.plot(x, df["Flow (L/min)"], label="YF-S201", color='#63ffc0' if is_dark else '#059669', linewidth=2)
+            ax.axhline(FLOW_LOW, linestyle="--", label="Low-flow limit", color='#ff5555' if is_dark else '#dc2626')
+            ax.set_title("Water Flow", color='#eaf8ff' if is_dark else '#082138', fontweight='bold')
+            ax.set_ylabel("L/min", color='#8faabb' if is_dark else '#486581')
+            ax.tick_params(colors='#8faabb' if is_dark else '#486581')
+            ax.grid(True, color='#1e3a5f' if is_dark else '#cbd5e1', linestyle='--', alpha=0.6)
+            for spine in ax.spines.values():
+                spine.set_color('#1e3a5f' if is_dark else '#cbd5e1')
+            leg = ax.legend(facecolor='#06111b' if is_dark else '#ffffff', edgecolor='#1e3a5f' if is_dark else '#cbd5e1')
+            for text in leg.get_texts():
+                text.set_color('#eaf8ff' if is_dark else '#082138')
+            plt.xticks(rotation=30)
+            st.pyplot(fig)
+            plt.close(fig)
+    else:
+        st.info("Collecting live sensor history...")
+    
+    # ============================================================
+    # ENGINEERING DATA
+    # ============================================================
+    with st.expander("📋 Engineering Data / CSV Report"):
+        st.dataframe(df.tail(30), use_container_width=True)
+    
+        csv_data = df.to_csv(index=False).encode("utf-8")
         st.download_button(
-            "⬇️ Download Radiometric Temperature Matrix (CSV)",
-            data=csv_buf.getvalue().encode("utf-8"),
-            file_name="testo_872_radiometric_temperature.csv",
+            "⬇️ Download Sensor Log",
+            data=csv_data,
+            file_name="boiler_sensor_fusion_log.csv",
             mime="text/csv"
         )
-    else:
-        st.info("Upload a Testo 872 BMT file to obtain the real radiometric Tmax, Tmin and average temperature.")
+    
+    # ============================================================
+    # FOOTER
 
+render_live_monitoring()
 
-
-# ============================================================
-# THERMOGRAPHY VIDEO INPUT
-# ============================================================
-st.markdown(
-    '<div class="section-title">🎥 THERMOGRAPHY VIDEO INPUT</div>',
-    unsafe_allow_html=True
-)
-
-v1, v2 = st.columns([1.05, 1.0])
-
-with v1:
-    thermo_video = st.file_uploader(
-        "Upload thermography video",
-        type=["mp4", "avi", "mov", "mkv", "webm"],
-        key="thermography_video_upload",
-        help="Upload a recorded thermography/thermal video for visual review."
-    )
-
-    if thermo_video is not None:
-        video_bytes = thermo_video.getvalue()
-        st.session_state.thermography_video_name = thermo_video.name
-        st.markdown(
-            """
-            <div style="max-width:560px;margin:0 auto;">
-            """,
-            unsafe_allow_html=True
-        )
-        st.video(video_bytes)
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.success(f"Thermography video loaded: {thermo_video.name}")
-
-with v2:
-    if thermo_video is not None:
-        st.markdown(
-            f"""
-            <div class="panel">
-            <div class="panel-head">THERMOGRAPHY VIDEO STATUS</div>
-            <div class="param">
-                <div class="param-name">FILE</div>
-                <div style="color:#eafaff;font-size:13px;">{thermo_video.name}</div>
-            </div>
-            <div class="param">
-                <div class="param-name">INPUT TYPE</div>
-                <div class="param-value">THERMOGRAPHY VIDEO</div>
-            </div>
-            <div class="param">
-                <div class="param-name">USE</div>
-                <div style="color:#b8cbd5;font-size:14px;line-height:1.5;">
-                    Visual thermal-video review alongside the Testo 872 BMT
-                    radiometric analysis and STM32 sensor-fusion results.
-                </div>
-            </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.info(
-            "The uploaded video is displayed for thermography review. "
-            "The fault diagnosis continues to use PT100, YF-S201, total water "
-            "and radiometric Testo 872 BMT data."
-        )
-    else:
-        st.markdown(
-            """
-            <div class="panel">
-            <div class="panel-head">THERMOGRAPHY VIDEO STATUS</div>
-            <div style="color:#8faabb;padding:20px 0;">
-                No thermography video uploaded.
-            </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-
-# ============================================================
-# FAULT ANALYSIS / SENSOR FUSION CONCLUSION
-# ============================================================
-thermal_text = f"{thermal_tmax:.2f} °C" if thermal_tmax is not None else "Not available"
-
-if thermal_tmax is None:
-    analysis_text = (
-        "Thermal evidence is not yet available. Upload a Testo 872 BMT file to combine "
-        "the radiometric thermal image with the PT100 and YF-S201 measurements."
-    )
-temp_state, flow_state, water_state = get_parameter_states(flow, temp, total)
-
-if thermal_tmax is None:
-    thermal_for_text = "not available"
-else:
-    thermal_for_text = f"{thermal_tmax:.2f} °C"
-
-if severity == "CRITICAL":
-    analysis_text = (
-        f"Rule-based sensor fusion detected {status}. "
-        f"PT100 is {temp_state} ({temp:.2f} °C), YF-S201 flow is {flow_state} "
-        f"({flow:.2f} L/min), total water is {water_state} ({total:.3f} L), "
-        f"and Testo 872 Tmax is {thermal_for_text}. "
-        "Multiple sensor conditions agree with the diagnosed fault."
-    )
-elif severity == "WARNING":
-    analysis_text = (
-        f"Rule-based sensor fusion detected {status}. "
-        f"PT100 is {temp_state} ({temp:.2f} °C), YF-S201 flow is {flow_state} "
-        f"({flow:.2f} L/min), total water is {water_state} ({total:.3f} L), "
-        f"and Testo 872 Tmax is {thermal_for_text}. "
-        "The combination of these measurements indicates a condition that should be checked."
-    )
-else:
-    analysis_text = (
-        f"No abnormal combination detected. "
-        f"PT100 is {temp_state} ({temp:.2f} °C), YF-S201 flow is {flow_state} "
-        f"({flow:.2f} L/min), total water is {water_state} ({total:.3f} L), "
-        f"and Testo 872 Tmax is {thermal_for_text}."
-    )
-
-st.markdown('<div class="section-title">🔎 FAULT ANALYSIS — THERMAL IMAGE + SENSOR FUSION</div>', unsafe_allow_html=True)
-a1, a2 = st.columns([1.15, 1.0])
-
-with a1:
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">WHAT PROBLEM IS DETECTED?</div>
-<div style="font-size:25px;font-weight:800;margin:8px 0 12px;">{status}</div>
-<div style="color:#b8cbd5;font-size:14px;line-height:1.65;">{analysis_text}</div>
-</div>
-""", unsafe_allow_html=True)
-
-with a2:
-    st.markdown(f"""
-<div class="panel">
-<div class="panel-head">FUSION EVIDENCE</div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>PT100</span><b>{temp:.2f} °C</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>YF-S201 Flow</span><b>{flow:.2f} L/min</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water</span><b>{total:.3f} L</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Testo 872 Tmax</span><b>{thermal_text}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Temperature State</span><b>{temp_state}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Flow State</span><b>{flow_state}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water State</span><b>{water_state}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Fusion Decision</span><b>{severity}</b></div>
-</div>
-""", unsafe_allow_html=True)
-
-
-
-if severity == "CRITICAL":
-    st.error(f"🚨 CRITICAL FAULT: {status}")
-    st.markdown(warning_beep_html(), unsafe_allow_html=True)
-    st.markdown(
-        '<div style="font-weight:700;font-size:15px;margin-top:-8px;">'
-        '🔊 WARNING SOUND: CRITICAL ALARM BEEP'
-        '</div>',
-        unsafe_allow_html=True
-    )
-elif severity == "WARNING":
-    st.warning(f"⚠️ WARNING: {status}")
-    st.markdown(warning_beep_html(), unsafe_allow_html=True)
-    st.markdown(
-        f'<div style="font-weight:700;font-size:15px;margin-top:-8px;">'
-        f'🔊 WARNING SOUND: {status}'
-        f'</div>',
-        unsafe_allow_html=True
-    )
-else:
-    st.success("✅ SYSTEM STATUS: NORMAL OPERATION")
-
-st.info(
-    "Testo 872 BMT is the thermal input. The BMT contains the radiometric temperature data; "
-    "the dashboard uses its IR matrix to calculate Tmax, Tmin, average temperature and hotspot position."
-)
-
-# ============================================================
-# DATA LOG
-# ============================================================
-st.session_state.history.append({
-    "Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    "Flow (L/min)": flow,
-    "PT100 (°C)": temp,
-    "Total Water (L)": total,
-    "Testo Tmax (°C)": thermal_tmax,
-    "Status": status,
-    "Severity": severity
-})
-st.session_state.history = st.session_state.history[-1000:]
-
-df = pd.DataFrame(st.session_state.history)
-
-# ============================================================
-# TREND CHARTS
-# ============================================================
-st.markdown('<div class="section-title">📈 REAL-TIME PROCESS TRENDS</div>', unsafe_allow_html=True)
-
-if len(df) >= 2:
-    x = pd.to_datetime(df["Time"])
-    g1, g2 = st.columns(2)
-    is_dark = (st.session_state.get("theme_mode", "dark") == "dark")
-
-    with g1:
-        fig, ax = plt.subplots(facecolor='#040e18' if is_dark else '#ffffff')
-        ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
-        ax.plot(x, df["PT100 (°C)"], label="PT100", color='#45e7ff' if is_dark else '#0284c7', linewidth=2)
-        ax.axhline(TEMP_NORMAL_MAX, linestyle="--", label="Normal limit", color='#ffd66b' if is_dark else '#d97706')
-        ax.axhline(TEMP_HIGH, linestyle="--", label="Fault limit", color='#ff5555' if is_dark else '#dc2626')
-        ax.set_title("Boiler Temperature", color='#eaf8ff' if is_dark else '#082138', fontweight='bold')
-        ax.set_ylabel("°C", color='#8faabb' if is_dark else '#486581')
-        ax.tick_params(colors='#8faabb' if is_dark else '#486581')
-        ax.grid(True, color='#1e3a5f' if is_dark else '#cbd5e1', linestyle='--', alpha=0.6)
-        for spine in ax.spines.values():
-            spine.set_color('#1e3a5f' if is_dark else '#cbd5e1')
-        leg = ax.legend(facecolor='#06111b' if is_dark else '#ffffff', edgecolor='#1e3a5f' if is_dark else '#cbd5e1')
-        for text in leg.get_texts():
-            text.set_color('#eaf8ff' if is_dark else '#082138')
-        plt.xticks(rotation=30)
-        st.pyplot(fig)
-        plt.close(fig)
-
-    with g2:
-        fig, ax = plt.subplots(facecolor='#040e18' if is_dark else '#ffffff')
-        ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
-        ax.plot(x, df["Flow (L/min)"], label="YF-S201", color='#63ffc0' if is_dark else '#059669', linewidth=2)
-        ax.axhline(FLOW_LOW, linestyle="--", label="Low-flow limit", color='#ff5555' if is_dark else '#dc2626')
-        ax.set_title("Water Flow", color='#eaf8ff' if is_dark else '#082138', fontweight='bold')
-        ax.set_ylabel("L/min", color='#8faabb' if is_dark else '#486581')
-        ax.tick_params(colors='#8faabb' if is_dark else '#486581')
-        ax.grid(True, color='#1e3a5f' if is_dark else '#cbd5e1', linestyle='--', alpha=0.6)
-        for spine in ax.spines.values():
-            spine.set_color('#1e3a5f' if is_dark else '#cbd5e1')
-        leg = ax.legend(facecolor='#06111b' if is_dark else '#ffffff', edgecolor='#1e3a5f' if is_dark else '#cbd5e1')
-        for text in leg.get_texts():
-            text.set_color('#eaf8ff' if is_dark else '#082138')
-        plt.xticks(rotation=30)
-        st.pyplot(fig)
-        plt.close(fig)
-else:
-    st.info("Collecting live sensor history...")
-
-# ============================================================
-# ENGINEERING DATA
-# ============================================================
-with st.expander("📋 Engineering Data / CSV Report"):
-    st.dataframe(df.tail(30), use_container_width=True)
-
-    csv_data = df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "⬇️ Download Sensor Log",
-        data=csv_data,
-        file_name="boiler_sensor_fusion_log.csv",
-        mime="text/csv"
-    )
-
-# ============================================================
-# FOOTER
 # ============================================================
 st.markdown("""
 <div class="footer">
@@ -2477,9 +2481,3 @@ MENTOR: N INDHU &nbsp; | &nbsp; RUJITH RS • SANJUSRINITHA T • RHOGETHRAM S T
 </div>
 """, unsafe_allow_html=True)
 
-# ============================================================
-# REFRESH
-# ============================================================
-if auto_refresh:
-    time.sleep(2)
-    st.rerun()

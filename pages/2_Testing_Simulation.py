@@ -1787,14 +1787,18 @@ with top_col1:
 
 with top_col2:
     cur_theme = st.session_state.get("theme_mode", "dark")
-    st.segmented_control(
+    mode_selection = st.segmented_control(
         "Theme Mode",
         options=["🌙 Dark", "☀️ Light"],
         default="🌙 Dark" if cur_theme == "dark" else "☀️ Light",
-        key="global_theme_switcher",
-        on_change=on_theme_change,
+        key=f"sim_theme_ctrl_{cur_theme}",
         label_visibility="collapsed"
     )
+    if mode_selection:
+        chosen = "light" if "Light" in mode_selection else "dark"
+        if chosen != cur_theme:
+            st.session_state.theme_mode = chosen
+            st.rerun()
 
 # ============================================================
 # HERO HEADER (MATCHES PAGE 1 EXACTLY)
