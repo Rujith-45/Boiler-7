@@ -58,8 +58,7 @@ if "theme_mode" not in st.session_state:
 def get_theme_css(theme="dark"):
     is_dark = (theme == "dark")
     if is_dark:
-        return r"""
-<style>
+        return r"""<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap');
 
 .stApp {
@@ -80,7 +79,7 @@ footer {visibility:hidden !important;}
 header[data-testid="stHeader"] {background: transparent !important;}
 
 /* ============================================================
-   PROPER SCADA NAVIGATION BUTTONS
+   SCADA NAVIGATION BUTTONS (DARK)
    ============================================================ */
 div[data-testid="stPageLink"] {
     display: flex;
@@ -123,7 +122,6 @@ div[data-testid="stPageLink"] a span {
     margin: 0 !important;
 }
 
-/* Active State for Current Page */
 div[data-testid="stPageLink"] a[aria-disabled="true"],
 div[data-testid="stPageLink"] a.disabled {
     background: linear-gradient(135deg, rgba(8, 48, 35, 0.95) 0%, rgba(3, 24, 18, 0.95) 100%) !important;
@@ -156,9 +154,9 @@ h1,h2,h3,h4 {
     align-items:center;
     justify-content:space-between;
     padding:13px 18px;
-    border:1px solid rgba(75,220,255,.18);
+    border:1px solid rgba(75,220,255,.22);
     border-radius:12px;
-    background:rgba(3,12,21,.92);
+    background:rgba(3,12,21,.94);
     box-shadow:0 8px 30px rgba(0,0,0,.25);
     min-height: 48px;
 }
@@ -464,29 +462,30 @@ h1,h2,h3,h4 {
     color:#eaf8ff;
 }
 
-/* Theme Switcher Styling in Top-Right Corner */
+/* Theme Switcher Styling in Top-Right Corner (DARK) */
 div[data-testid="stSegmentedControl"] {
-    background: rgba(3, 12, 21, 0.92) !important;
-    border: 1px solid rgba(75, 220, 255, 0.28) !important;
+    background: rgba(3, 12, 21, 0.94) !important;
+    border: 1.5px solid rgba(75, 220, 255, 0.35) !important;
     border-radius: 12px !important;
     padding: 3px !important;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
 }
 
 div[data-testid="stSegmentedControl"] button {
     border-radius: 9px !important;
     color: #8faabb !important;
     font-family: 'Orbitron', sans-serif !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     font-size: 12px !important;
     border: none !important;
+    background: transparent !important;
 }
 
 div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
     background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
     color: #45e7ff !important;
-    border: 1px solid rgba(69, 231, 255, 0.5) !important;
-    box-shadow: 0 0 15px rgba(69, 231, 255, 0.3) !important;
+    border: 1px solid rgba(69, 231, 255, 0.6) !important;
+    box-shadow: 0 0 15px rgba(69, 231, 255, 0.35) !important;
 }
 
 @keyframes fadein {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -495,28 +494,27 @@ div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
 @keyframes thermal {from{transform:scale(.82);opacity:.45}to{transform:scale(1.16);opacity:1}}
 @keyframes pulse {50%{transform:scale(1.55);opacity:.62}}
 @keyframes moveflow {from{transform:translateX(0);opacity:0}15%{opacity:1}80%{opacity:1}to{transform:translateX(175px);opacity:0}}
-</style>
-"""
+</style>"""
     else:
-        # LIGHT THEME
-        return r"""
-<style>
+        return r"""<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap');
 
+/* Base App Background & Typography */
 .stApp {
     background:
-        radial-gradient(circle at 50% 0%, rgba(0, 160, 255, .08), transparent 35%),
-        linear-gradient(135deg, #f5f8fc 0%, #e9f1f8 52%, #f1f5fa 100%);
-    color: #0d2137;
+        radial-gradient(circle at 50% 0%, rgba(2, 132, 199, .09), transparent 35%),
+        linear-gradient(135deg, #f8fafc 0%, #edf5fb 52%, #f1f6fa 100%) !important;
+    color: #0f172a !important;
 }
 
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #ffffff 0%, #edf3f8 100%) !important;
-    border-right: 1px solid rgba(0, 140, 220, 0.22) !important;
+    background: #ffffff !important;
+    border-right: 1.5px solid rgba(2, 132, 199, 0.22) !important;
+    box-shadow: 2px 0 15px rgba(15, 23, 42, 0.04) !important;
 }
 
 [data-testid="stSidebar"] * {
-    color: #0d2137 !important;
+    color: #0f172a !important;
 }
 
 [data-testid="stToolbar"] {visibility:hidden !important;}
@@ -524,9 +522,7 @@ footer {visibility:hidden !important;}
 #MainMenu {visibility:hidden !important;}
 header[data-testid="stHeader"] {background: transparent !important;}
 
-/* ============================================================
-   PROPER SCADA NAVIGATION BUTTONS (LIGHT)
-   ============================================================ */
+/* Navigation Links */
 div[data-testid="stPageLink"] {
     display: flex;
     justify-content: center;
@@ -542,11 +538,11 @@ div[data-testid="stPageLink"] a {
     min-height: 48px !important;
     padding: 12px 24px !important;
     border-radius: 12px !important;
-    background: linear-gradient(135deg, #ffffff 0%, #f0f6fc 100%) !important;
-    border: 1.5px solid rgba(0, 140, 220, 0.35) !important;
-    color: #082138 !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f4f8fc 100%) !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.35) !important;
+    color: #0f172a !important;
     text-decoration: none !important;
-    box-shadow: 0 4px 14px rgba(0, 30, 60, 0.08), inset 0 0 10px rgba(0, 140, 220, 0.05) !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06), inset 0 0 10px rgba(2, 132, 199, 0.04) !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     cursor: pointer !important;
 }
@@ -554,7 +550,7 @@ div[data-testid="stPageLink"] a {
 div[data-testid="stPageLink"] a:hover {
     border-color: #0284c7 !important;
     background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
-    box-shadow: 0 0 20px rgba(2, 132, 199, 0.25) !important;
+    box-shadow: 0 4px 18px rgba(2, 132, 199, 0.2) !important;
     transform: translateY(-2px) !important;
 }
 
@@ -564,16 +560,15 @@ div[data-testid="stPageLink"] a span {
     font-size: 13.5px !important;
     font-weight: 700 !important;
     letter-spacing: 1.2px !important;
-    color: #082138 !important;
+    color: #0f172a !important;
     margin: 0 !important;
 }
 
-/* Active State for Current Page (LIGHT) */
 div[data-testid="stPageLink"] a[aria-disabled="true"],
 div[data-testid="stPageLink"] a.disabled {
-    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%) !important;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
     border: 1.5px solid #059669 !important;
-    box-shadow: 0 0 18px rgba(5, 150, 105, 0.25), inset 0 0 12px rgba(5, 150, 105, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(5, 150, 105, 0.18), inset 0 0 12px rgba(5, 150, 105, 0.1) !important;
     opacity: 1 !important;
     cursor: default !important;
 }
@@ -594,18 +589,20 @@ div[data-testid="stPageLink"] a[aria-disabled="true"] span {
 
 h1,h2,h3,h4 {
     font-family: 'Orbitron', sans-serif !important;
+    color: #0f172a !important;
 }
 
+/* Topbar in Light Mode */
 .topbar {
     display:flex;
     align-items:center;
     justify-content:space-between;
     padding:13px 18px;
-    border:1px solid rgba(0, 140, 220, 0.25);
-    border-radius:12px;
-    background:rgba(255, 255, 255, 0.95);
-    box-shadow:0 8px 25px rgba(0, 30, 60, 0.08);
-    color:#0b253a;
+    border:1.5px solid rgba(2, 132, 199, 0.25) !important;
+    border-radius:14px !important;
+    background:#ffffff !important;
+    box-shadow:0 6px 22px rgba(15, 23, 42, 0.06) !important;
+    color:#0f172a !important;
     min-height: 48px;
 }
 
@@ -613,34 +610,34 @@ h1,h2,h3,h4 {
     font-family:'Orbitron',sans-serif;
     font-weight:700;
     letter-spacing:1.5px;
-    color:#072740;
+    color:#072740 !important;
 }
 
-.brand span {color:#0284c7;}
+.brand span {color:#0284c7 !important;}
 
 .online {
-    color:#059669;
-    font-weight:700;
+    color:#059669 !important;
+    font-weight:700 !important;
     letter-spacing:1px;
-    text-shadow:0 0 8px rgba(5, 150, 105, 0.25);
 }
 
 .sim-tag {
-    color:#b45309;
-    font-weight:700;
+    color:#b45309 !important;
+    font-weight:700 !important;
     letter-spacing:1px;
 }
 
-.offline {color:#dc2626;font-weight:700;}
+.offline {color:#dc2626 !important; font-weight:700 !important;}
 
+/* Hero Header in Light Mode */
 .hero {
     padding:24px 28px;
     border-radius:18px;
-    border:1px solid rgba(0, 140, 220, 0.25);
+    border:1.5px solid rgba(2, 132, 199, 0.22) !important;
     background:
-      linear-gradient(110deg,#ffffff 0%, #f1f7fc 100%),
-      radial-gradient(circle at right,rgba(255,100,20,.08),transparent 30%);
-    box-shadow:0 10px 30px rgba(0, 30, 60, 0.07);
+      linear-gradient(110deg,#ffffff 0%, #f0f7fe 100%),
+      radial-gradient(circle at right,rgba(255,100,20,.06),transparent 30%) !important;
+    box-shadow:0 10px 30px rgba(15, 23, 42, 0.06) !important;
     animation:fadein .7s ease;
 }
 
@@ -649,66 +646,217 @@ h1,h2,h3,h4 {
     font-size:clamp(23px,3vw,38px);
     font-weight:800;
     line-height:1.15;
-    color:#082138;
+    color:#0f172a !important;
 }
 
-.hero-title span {color:#0284c7;text-shadow:0 0 15px rgba(2, 132, 199, 0.25);}
+.hero-title span {color:#0284c7 !important; text-shadow:none !important;}
 
 .hero-sub {
-    color:#486581;
+    color:#475569 !important;
     margin-top:8px;
     font-size:16px;
 }
 
 .team-line {
     margin-top:14px;
-    color:#627d98;
+    color:#64748b !important;
     font-size:13px;
 }
 
 .section-title {
     margin:22px 0 10px;
     padding:9px 13px;
-    border-left:3px solid #0284c7;
-    background:linear-gradient(90deg,rgba(2, 132, 199, 0.12),transparent);
+    border-left:4px solid #0284c7 !important;
+    background:linear-gradient(90deg,rgba(2, 132, 199, 0.12),transparent) !important;
     font-family:'Orbitron',sans-serif;
     font-size:14px;
     letter-spacing:1.4px;
-    color:#082138;
+    color:#0f172a !important;
+    font-weight:700 !important;
 }
 
+/* Panels and Cards in Light Mode */
 .panel {
-    background:linear-gradient(145deg, #ffffff 0%, #f5f9fc 100%);
-    border:1px solid rgba(0, 140, 220, 0.22);
-    border-radius:15px;
+    background:#ffffff !important;
+    border:1.5px solid rgba(2, 132, 199, 0.22) !important;
+    border-radius:16px !important;
     padding:17px;
-    box-shadow:0 9px 25px rgba(0, 30, 60, 0.07);
-    color:#0b253a;
+    box-shadow:0 8px 25px rgba(15, 23, 42, 0.06) !important;
+    color:#0f172a !important;
 }
 
 .panel-head {
-    color:#0284c7;
+    color:#0284c7 !important;
     font-family:'Orbitron',sans-serif;
     font-size:12px;
     letter-spacing:1.4px;
     margin-bottom:10px;
+    font-weight:700 !important;
 }
 
 .param {
     padding:11px 0;
-    border-bottom:1px solid rgba(0, 140, 220, 0.12);
+    border-bottom:1px solid rgba(2, 132, 199, 0.12) !important;
 }
 
 .param:last-child {border-bottom:none;}
 
-.param-name {color:#486581;font-size:12px;}
+.param-name {color:#475569 !important; font-size:12px; font-weight:600 !important;}
 .param-value {
     font-family:'Orbitron',sans-serif;
     font-size:25px;
-    font-weight:700;
-    color:#082138;
+    font-weight:800;
+    color:#0f172a !important;
 }
 
+.range-box {
+    padding:10px 13px;
+    border-radius:10px;
+    margin-top:9px;
+    background:#f1f7fd !important;
+    border:1px solid rgba(2, 132, 199, 0.22) !important;
+}
+
+.range-title {
+    color:#475569 !important;
+    font-size:12px;
+    font-weight:600 !important;
+}
+
+.range-value {
+    font-family:'Orbitron',sans-serif;
+    color:#0f172a !important;
+    font-size:16px;
+    font-weight:700;
+}
+
+.info-box {
+    padding:20px;
+    border-radius:14px;
+    border:1.5px solid rgba(2, 132, 199, 0.22) !important;
+    background:#ffffff !important;
+    box-shadow:0 6px 20px rgba(15, 23, 42, 0.05) !important;
+    color:#0f172a !important;
+}
+
+.bench-card {
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(2, 132, 199, 0.22) !important;
+    background: #ffffff !important;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05) !important;
+    color:#0f172a !important;
+}
+
+/* Action / Preset Buttons in Light Mode */
+div.stButton > button {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.35) !important;
+    color: #0f172a !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+    transition: all 0.2s ease !important;
+}
+
+div.stButton > button:hover {
+    background: #e0f2fe !important;
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.2) !important;
+}
+
+div.stButton > button:active,
+div.stButton > button:focus {
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+    border-color: #0284c7 !important;
+}
+
+/* Sliders in Light Mode */
+div[data-testid="stSlider"] label p {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+}
+
+div[data-testid="stSlider"] [data-testid="stThumbValue"] {
+    color: #0284c7 !important;
+    font-weight: 700 !important;
+}
+
+div[data-testid="stSlider"] [data-testid="stTickBarMin"],
+div[data-testid="stSlider"] [data-testid="stTickBarMax"] {
+    color: #64748b !important;
+}
+
+/* Input Fields in Light Mode */
+div[data-baseweb="input"] {
+    background-color: #ffffff !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.3) !important;
+    border-radius: 10px !important;
+}
+
+div[data-baseweb="input"] input {
+    color: #0f172a !important;
+}
+
+div[data-testid="stFileUploader"] {
+    background-color: #ffffff !important;
+    border: 1.5px dashed rgba(2, 132, 199, 0.45) !important;
+    border-radius: 14px !important;
+}
+
+div[data-testid="stFileUploader"] * {
+    color: #0f172a !important;
+}
+
+div[data-testid="stExpander"] {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.22) !important;
+    border-radius: 12px !important;
+}
+
+div[data-testid="stExpander"] * {
+    color: #0f172a !important;
+}
+
+/* Captions and Paragraphs */
+.stCaption, p, span, label {
+    color: #475569 !important;
+}
+
+/* Theme Switcher Styling (LIGHT) */
+div[data-testid="stSegmentedControl"] {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 3px !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06) !important;
+}
+
+div[data-testid="stSegmentedControl"] button {
+    border-radius: 9px !important;
+    color: #64748b !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+    color: #0284c7 !important;
+    border: 1px solid rgba(2, 132, 199, 0.45) !important;
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.2) !important;
+}
+
+/* Boiler Graphic in Light Mode */
 .boiler-area {
     min-height:385px;
     display:flex;
@@ -722,12 +870,12 @@ h1,h2,h3,h4 {
     width:205px;
     height:270px;
     position:relative;
-    border:3px solid #64748b;
+    border:3px solid #94a3b8;
     border-radius:30px 30px 45px 45px;
     background:linear-gradient(90deg,#e2e8f0,#cbd5e1 48%,#e2e8f0);
     box-shadow:
         inset 0 0 20px rgba(0,0,0,.15),
-        0 0 25px rgba(0, 140, 220, 0.12);
+        0 0 25px rgba(2, 132, 199, 0.12);
 }
 
 .dome {
@@ -736,7 +884,7 @@ h1,h2,h3,h4 {
     height:34px;
     top:-35px;
     left:53px;
-    border:3px solid #64748b;
+    border:3px solid #94a3b8;
     border-radius:50%;
     background:#e2e8f0;
 }
@@ -761,7 +909,7 @@ h1,h2,h3,h4 {
     left:-40%;
     top:-8px;
     border-radius:50%;
-    border-top:3px solid rgba(255,255,255,.8);
+    border-top:3px solid rgba(255,255,255,.9);
     animation:wave 2s linear infinite;
 }
 
@@ -809,7 +957,7 @@ h1,h2,h3,h4 {
     width:90px;
     height:30px;
     left:calc(50% - 220px);
-    border:3px solid #64748b;
+    border:3px solid #94a3b8;
     border-right:0;
     border-radius:16px 0 0 16px;
 }
@@ -819,7 +967,7 @@ h1,h2,h3,h4 {
     width:90px;
     height:30px;
     right:calc(50% - 220px);
-    border:3px solid #64748b;
+    border:3px solid #94a3b8;
     border-left:0;
     border-radius:0 16px 16px 0;
 }
@@ -859,80 +1007,17 @@ h1,h2,h3,h4 {
     font-family:'Orbitron',sans-serif;
     font-size:28px;
     font-weight:800;
-    color:#082138;
-}
-
-.range-box {
-    padding:10px 13px;
-    border-radius:10px;
-    margin-top:9px;
-    background:rgba(235, 244, 255, 0.85);
-    border:1px solid rgba(0, 140, 220, 0.20);
-}
-
-.range-title {
-    color:#486581;
-    font-size:12px;
-}
-
-.range-value {
-    font-family:'Orbitron',sans-serif;
-    color:#082138;
-    font-size:16px;
-    font-weight:700;
-}
-
-.info-box {
-    padding:20px;
-    border-radius:14px;
-    border:1px solid rgba(0,140,220,.22);
-    background:rgba(240,246,252,.85);
-    color:#0b253a;
+    color:#0f172a;
 }
 
 .footer {
     text-align:center;
-    color:#627d98;
+    color:#64748b;
     margin-top:25px;
     padding-top:18px;
-    border-top:1px solid rgba(0, 140, 220, 0.18);
+    border-top:1px solid rgba(2, 132, 199, 0.18);
     font-size:12px;
     letter-spacing:1px;
-}
-
-.bench-card {
-    padding: 16px 20px;
-    border-radius: 14px;
-    border: 1px solid rgba(0,140,220,.22);
-    background: linear-gradient(135deg, #ffffff 0%, #f4f8fc 100%);
-    margin-bottom: 14px;
-    box-shadow: 0 4px 15px rgba(0,30,60,.06);
-    color:#0b253a;
-}
-
-/* Theme Switcher Styling in Top-Right Corner (LIGHT) */
-div[data-testid="stSegmentedControl"] {
-    background: rgba(255, 255, 255, 0.95) !important;
-    border: 1px solid rgba(0, 140, 220, 0.3) !important;
-    border-radius: 12px !important;
-    padding: 3px !important;
-    box-shadow: 0 4px 18px rgba(0, 30, 60, 0.08) !important;
-}
-
-div[data-testid="stSegmentedControl"] button {
-    border-radius: 9px !important;
-    color: #486581 !important;
-    font-family: 'Orbitron', sans-serif !important;
-    font-weight: 600 !important;
-    font-size: 12px !important;
-    border: none !important;
-}
-
-div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
-    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
-    color: #0284c7 !important;
-    border: 1px solid rgba(2, 132, 199, 0.5) !important;
-    box-shadow: 0 0 12px rgba(2, 132, 199, 0.25) !important;
 }
 
 @keyframes fadein {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -941,8 +1026,7 @@ div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
 @keyframes thermal {from{transform:scale(.82);opacity:.45}to{transform:scale(1.16);opacity:1}}
 @keyframes pulse {50%{transform:scale(1.55);opacity:.62}}
 @keyframes moveflow {from{transform:translateX(0);opacity:0}15%{opacity:1}80%{opacity:1}to{transform:translateX(175px);opacity:0}}
-</style>
-"""
+</style>"""
 
 st.markdown(get_theme_css(st.session_state.theme_mode), unsafe_allow_html=True)
 
@@ -1612,12 +1696,12 @@ with top_col2:
         "Theme Mode",
         options=["🌙 Dark", "☀️ Light"],
         default="🌙 Dark" if cur_theme == "dark" else "☀️ Light",
-        key="topbar_theme_toggle_sim",
+        key=f"sim_theme_ctrl_{cur_theme}",
         label_visibility="collapsed"
     )
     if mode_selection:
         chosen = "light" if "Light" in mode_selection else "dark"
-        if chosen != st.session_state.get("theme_mode", "dark"):
+        if chosen != cur_theme:
             st.session_state.theme_mode = chosen
             st.rerun()
 
