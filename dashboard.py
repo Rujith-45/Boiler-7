@@ -26,6 +26,14 @@ st.set_page_config(
 )
 
 # ============================================================
+# NAVIGATION
+# ============================================================
+st.sidebar.markdown("## 🧭 Navigation")
+st.sidebar.page_link("dashboard.py", label="🏭 Live Monitoring", icon="🏭")
+st.sidebar.page_link("pages/2_Testing_Simulation.py", label="🧪 Testing / Simulation", icon="🧪")
+st.sidebar.markdown("---")
+
+# ============================================================
 # DEFAULT CONFIGURATION
 # ============================================================
 
@@ -1517,7 +1525,7 @@ if thermal_tmax is None:
         "Thermal evidence is not yet available. Upload a Testo 872 BMT file to combine "
         "the radiometric thermal image with the PT100 and YF-S201 measurements."
     )
-eltemp_state, flow_state, water_state = get_parameter_states(flow, temp, total)
+temp_state, flow_state, water_state = get_parameter_states(flow, temp, total)
 
 if thermal_tmax is None:
     thermal_for_text = "not available"
