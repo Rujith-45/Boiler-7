@@ -65,10 +65,16 @@ if "bmt_name" not in st.session_state:
 if "thermography_video_name" not in st.session_state:
     st.session_state.thermography_video_name = ""
 
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "dark"
+
 # ============================================================
-# PROFESSIONAL UI
+# PROFESSIONAL UI (DYNAMIC DARK & LIGHT SCADA THEMES)
 # ============================================================
-st.markdown(r"""
+def get_theme_css(theme="dark"):
+    is_dark = (theme == "dark")
+    if is_dark:
+        return r"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap');
 
@@ -77,6 +83,11 @@ st.markdown(r"""
         radial-gradient(circle at 50% 0%, rgba(0, 190, 255, .10), transparent 30%),
         linear-gradient(135deg, #02060c 0%, #06111b 52%, #02050a 100%);
     color: #eaf8ff;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #040e18 0%, #02060c 100%) !important;
+    border-right: 1px solid rgba(75, 220, 255, 0.15) !important;
 }
 
 [data-testid="stToolbar"] {visibility:hidden !important;}
@@ -143,7 +154,6 @@ div[data-testid="stPageLink"] a[aria-disabled="true"] span {
     color: #55ffc0 !important;
 }
 
-
 .block-container {
     max-width: 1700px;
     padding: 14px 2rem 30px 2rem;
@@ -162,11 +172,11 @@ h1,h2,h3,h4 {
     align-items:center;
     justify-content:space-between;
     padding:13px 18px;
-    margin-bottom:14px;
     border:1px solid rgba(75,220,255,.18);
     border-radius:12px;
     background:rgba(3,12,21,.92);
     box-shadow:0 8px 30px rgba(0,0,0,.25);
+    min-height: 48px;
 }
 
 .brand {
@@ -203,6 +213,7 @@ h1,h2,h3,h4 {
     font-size:clamp(23px,3vw,38px);
     font-weight:800;
     line-height:1.15;
+    color:#ffffff;
 }
 
 .hero-title span {color:#45e7ff;text-shadow:0 0 20px rgba(69,231,255,.4);}
@@ -227,6 +238,7 @@ h1,h2,h3,h4 {
     font-family:'Orbitron',sans-serif;
     font-size:14px;
     letter-spacing:1.4px;
+    color:#eaf8ff;
 }
 
 .panel {
@@ -235,6 +247,7 @@ h1,h2,h3,h4 {
     border-radius:15px;
     padding:17px;
     box-shadow:0 9px 30px rgba(0,0,0,.24);
+    color:#eaf8ff;
 }
 
 .panel-head {
@@ -409,6 +422,7 @@ h1,h2,h3,h4 {
     font-family:'Orbitron',sans-serif;
     font-size:28px;
     font-weight:800;
+    color:#edfaff;
 }
 
 .range-box {
@@ -441,6 +455,31 @@ h1,h2,h3,h4 {
     letter-spacing:1px;
 }
 
+/* Theme Switcher Styling in Top-Right Corner */
+div[data-testid="stSegmentedControl"] {
+    background: rgba(3, 12, 21, 0.92) !important;
+    border: 1px solid rgba(75, 220, 255, 0.28) !important;
+    border-radius: 12px !important;
+    padding: 3px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+}
+
+div[data-testid="stSegmentedControl"] button {
+    border-radius: 9px !important;
+    color: #8faabb !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    border: none !important;
+}
+
+div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
+    background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
+    color: #45e7ff !important;
+    border: 1px solid rgba(69, 231, 255, 0.5) !important;
+    box-shadow: 0 0 15px rgba(69, 231, 255, 0.3) !important;
+}
+
 @keyframes fadein {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes wave {to{transform:translateX(45px)}}
 @keyframes heater {from{transform:scaleX(.88);opacity:.65}to{transform:scaleX(1.08);opacity:1}}
@@ -448,7 +487,430 @@ h1,h2,h3,h4 {
 @keyframes pulse {50%{transform:scale(1.55);opacity:.62}}
 @keyframes moveflow {from{transform:translateX(0);opacity:0}15%{opacity:1}80%{opacity:1}to{transform:translateX(175px);opacity:0}}
 </style>
-""", unsafe_allow_html=True)
+"""
+    else:
+        # LIGHT THEME
+        return r"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap');
+
+.stApp {
+    background:
+        radial-gradient(circle at 50% 0%, rgba(0, 160, 255, .08), transparent 35%),
+        linear-gradient(135deg, #f5f8fc 0%, #e9f1f8 52%, #f1f5fa 100%);
+    color: #0d2137;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #ffffff 0%, #edf3f8 100%) !important;
+    border-right: 1px solid rgba(0, 140, 220, 0.22) !important;
+}
+
+[data-testid="stSidebar"] * {
+    color: #0d2137 !important;
+}
+
+[data-testid="stToolbar"] {visibility:hidden !important;}
+footer {visibility:hidden !important;}
+#MainMenu {visibility:hidden !important;}
+header[data-testid="stHeader"] {background: transparent !important;}
+
+/* ============================================================
+   PROPER SCADA NAVIGATION BUTTONS (LIGHT)
+   ============================================================ */
+div[data-testid="stPageLink"] {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+div[data-testid="stPageLink"] a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f6fc 100%) !important;
+    border: 1.5px solid rgba(0, 140, 220, 0.35) !important;
+    color: #082138 !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 14px rgba(0, 30, 60, 0.08), inset 0 0 10px rgba(0, 140, 220, 0.05) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+div[data-testid="stPageLink"] a:hover {
+    border-color: #0284c7 !important;
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+    box-shadow: 0 0 20px rgba(2, 132, 199, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+div[data-testid="stPageLink"] a p, 
+div[data-testid="stPageLink"] a span {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.2px !important;
+    color: #082138 !important;
+    margin: 0 !important;
+}
+
+/* Active State for Current Page (LIGHT) */
+div[data-testid="stPageLink"] a[aria-disabled="true"],
+div[data-testid="stPageLink"] a.disabled {
+    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%) !important;
+    border: 1.5px solid #059669 !important;
+    box-shadow: 0 0 18px rgba(5, 150, 105, 0.25), inset 0 0 12px rgba(5, 150, 105, 0.15) !important;
+    opacity: 1 !important;
+    cursor: default !important;
+}
+
+div[data-testid="stPageLink"] a[aria-disabled="true"] p,
+div[data-testid="stPageLink"] a[aria-disabled="true"] span {
+    color: #065f46 !important;
+}
+
+.block-container {
+    max-width: 1700px;
+    padding: 14px 2rem 30px 2rem;
+}
+
+* {
+    font-family: 'Inter', sans-serif;
+}
+
+h1,h2,h3,h4 {
+    font-family: 'Orbitron', sans-serif !important;
+}
+
+.topbar {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:13px 18px;
+    border:1px solid rgba(0, 140, 220, 0.25);
+    border-radius:12px;
+    background:rgba(255, 255, 255, 0.95);
+    box-shadow:0 8px 25px rgba(0, 30, 60, 0.08);
+    color:#0b253a;
+    min-height: 48px;
+}
+
+.brand {
+    font-family:'Orbitron',sans-serif;
+    font-weight:700;
+    letter-spacing:1.5px;
+    color:#072740;
+}
+
+.brand span {color:#0284c7;}
+
+.online {
+    color:#059669;
+    font-weight:700;
+    letter-spacing:1px;
+    text-shadow:0 0 8px rgba(5, 150, 105, 0.25);
+}
+
+.offline {color:#dc2626;font-weight:700;}
+
+.hero {
+    padding:24px 28px;
+    border-radius:18px;
+    border:1px solid rgba(0, 140, 220, 0.25);
+    background:
+      linear-gradient(110deg,#ffffff 0%, #f1f7fc 100%),
+      radial-gradient(circle at right,rgba(255,100,20,.08),transparent 30%);
+    box-shadow:0 10px 30px rgba(0, 30, 60, 0.07);
+    animation:fadein .7s ease;
+}
+
+.hero-title {
+    font-family:'Orbitron',sans-serif;
+    font-size:clamp(23px,3vw,38px);
+    font-weight:800;
+    line-height:1.15;
+    color:#082138;
+}
+
+.hero-title span {color:#0284c7;text-shadow:0 0 15px rgba(2, 132, 199, 0.25);}
+
+.hero-sub {
+    color:#486581;
+    margin-top:8px;
+    font-size:16px;
+}
+
+.team-line {
+    margin-top:14px;
+    color:#627d98;
+    font-size:13px;
+}
+
+.section-title {
+    margin:22px 0 10px;
+    padding:9px 13px;
+    border-left:3px solid #0284c7;
+    background:linear-gradient(90deg,rgba(2, 132, 199, 0.12),transparent);
+    font-family:'Orbitron',sans-serif;
+    font-size:14px;
+    letter-spacing:1.4px;
+    color:#082138;
+}
+
+.panel {
+    background:linear-gradient(145deg, #ffffff 0%, #f5f9fc 100%);
+    border:1px solid rgba(0, 140, 220, 0.22);
+    border-radius:15px;
+    padding:17px;
+    box-shadow:0 9px 25px rgba(0, 30, 60, 0.07);
+    color:#0b253a;
+}
+
+.panel-head {
+    color:#0284c7;
+    font-family:'Orbitron',sans-serif;
+    font-size:12px;
+    letter-spacing:1.4px;
+    margin-bottom:10px;
+}
+
+.param {
+    padding:11px 0;
+    border-bottom:1px solid rgba(0, 140, 220, 0.12);
+}
+
+.param:last-child {border-bottom:none;}
+
+.param-name {color:#486581;font-size:12px;}
+.param-value {
+    font-family:'Orbitron',sans-serif;
+    font-size:25px;
+    font-weight:700;
+    color:#082138;
+}
+
+.boiler-area {
+    min-height:385px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+    overflow:hidden;
+}
+
+.boiler-body {
+    width:205px;
+    height:270px;
+    position:relative;
+    border:3px solid #64748b;
+    border-radius:30px 30px 45px 45px;
+    background:linear-gradient(90deg,#e2e8f0,#cbd5e1 48%,#e2e8f0);
+    box-shadow:
+        inset 0 0 20px rgba(0,0,0,.15),
+        0 0 25px rgba(0, 140, 220, 0.12);
+}
+
+.dome {
+    position:absolute;
+    width:92px;
+    height:34px;
+    top:-35px;
+    left:53px;
+    border:3px solid #64748b;
+    border-radius:50%;
+    background:#e2e8f0;
+}
+
+.water {
+    position:absolute;
+    left:13px;
+    right:13px;
+    bottom:13px;
+    height:57%;
+    border-radius:0 0 30px 30px;
+    background:linear-gradient(#38bdf8,#0284c7);
+    border-top:2px solid #0369a1;
+    overflow:hidden;
+}
+
+.wave {
+    position:absolute;
+    width:180%;
+    height:30px;
+    left:-40%;
+    top:-8px;
+    border-radius:50%;
+    border-top:3px solid rgba(255,255,255,.8);
+    animation:wave 2s linear infinite;
+}
+
+.heater {
+    position:absolute;
+    width:112px;
+    height:15px;
+    left:46px;
+    bottom:7px;
+    border-radius:50%;
+    background:#f97316;
+    box-shadow:0 0 18px #ea580c,0 0 40px rgba(234,88,12,.5);
+    animation:heater 1.1s ease-in-out infinite alternate;
+}
+
+.thermal-zone {
+    position:absolute;
+    width:120px;
+    height:120px;
+    right:-2px;
+    top:47px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(249,115,22,.4),transparent 67%);
+    filter:blur(3px);
+    animation:thermal 1.8s ease-in-out infinite alternate;
+}
+
+.sensor-dot {
+    position:absolute;
+    width:13px;
+    height:13px;
+    border-radius:50%;
+    background:#0284c7;
+    box-shadow:0 0 15px #0284c7;
+    animation:pulse 1.5s infinite;
+    z-index:5;
+}
+
+.pt100 {right:-25px;top:95px;}
+.flow {left:-25px;bottom:100px;}
+.thermal {right:28px;top:28px;background:#f97316;box-shadow:0 0 15px #f97316;}
+
+.pipe-left {
+    position:absolute;
+    width:90px;
+    height:30px;
+    left:calc(50% - 220px);
+    border:3px solid #64748b;
+    border-right:0;
+    border-radius:16px 0 0 16px;
+}
+
+.pipe-right {
+    position:absolute;
+    width:90px;
+    height:30px;
+    right:calc(50% - 220px);
+    border:3px solid #64748b;
+    border-left:0;
+    border-radius:0 16px 16px 0;
+}
+
+.flow-arrow {
+    position:absolute;
+    left:calc(50% - 245px);
+    color:#0284c7;
+    font-size:22px;
+    animation:moveflow 2s linear infinite;
+}
+
+.health {
+    text-align:center;
+}
+
+.health-circle {
+    width:150px;
+    height:150px;
+    margin:8px auto 15px;
+    border-radius:50%;
+    background:conic-gradient(#10b981 0 94%,#e2e8f0 94% 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 25px rgba(16, 185, 129, 0.2);
+}
+
+.health-inner {
+    width:116px;
+    height:116px;
+    border-radius:50%;
+    background:#ffffff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Orbitron',sans-serif;
+    font-size:28px;
+    font-weight:800;
+    color:#082138;
+}
+
+.range-box {
+    padding:10px 13px;
+    border-radius:10px;
+    margin-top:9px;
+    background:rgba(235, 244, 255, 0.85);
+    border:1px solid rgba(0, 140, 220, 0.20);
+}
+
+.range-title {
+    color:#486581;
+    font-size:12px;
+}
+
+.range-value {
+    font-family:'Orbitron',sans-serif;
+    color:#082138;
+    font-size:16px;
+    font-weight:700;
+}
+
+.footer {
+    text-align:center;
+    color:#627d98;
+    margin-top:25px;
+    padding-top:18px;
+    border-top:1px solid rgba(0, 140, 220, 0.18);
+    font-size:12px;
+    letter-spacing:1px;
+}
+
+/* Theme Switcher Styling in Top-Right Corner (LIGHT) */
+div[data-testid="stSegmentedControl"] {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 140, 220, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 3px !important;
+    box-shadow: 0 4px 18px rgba(0, 30, 60, 0.08) !important;
+}
+
+div[data-testid="stSegmentedControl"] button {
+    border-radius: 9px !important;
+    color: #486581 !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    border: none !important;
+}
+
+div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+    color: #0284c7 !important;
+    border: 1px solid rgba(2, 132, 199, 0.5) !important;
+    box-shadow: 0 0 12px rgba(2, 132, 199, 0.25) !important;
+}
+
+@keyframes fadein {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes wave {to{transform:translateX(45px)}}
+@keyframes heater {from{transform:scaleX(.88);opacity:.65}to{transform:scaleX(1.08);opacity:1}}
+@keyframes thermal {from{transform:scale(.82);opacity:.45}to{transform:scale(1.16);opacity:1}}
+@keyframes pulse {50%{transform:scale(1.55);opacity:.62}}
+@keyframes moveflow {from{transform:translateX(0);opacity:0}15%{opacity:1}80%{opacity:1}to{transform:translateX(175px);opacity:0}}
+</style>
+"""
+
+st.markdown(get_theme_css(st.session_state.theme_mode), unsafe_allow_html=True)
 
 # ============================================================
 # BOOT SCREEN
@@ -1160,7 +1622,7 @@ if bmt_result is not None:
 status, severity = sensor_fusion(flow, temp, thermal_tmax, thermal_hotspot, total)
 
 # ============================================================
-# TOP BAR
+# TOP BAR (WITH LIGHT / DARK MODE IN RIGHT CORNER)
 # ============================================================
 clock = datetime.now().strftime("%H:%M:%S")
 connection = (
@@ -1169,12 +1631,30 @@ connection = (
     '<span class="offline">● STM32 OFFLINE</span>'
 )
 
-st.markdown(f"""
-<div class="topbar">
-    <div class="brand">🔥 <span>BOILER AI</span> / CONTROL & DIAGNOSTICS</div>
-    <div>{connection} &nbsp; | &nbsp; {clock}</div>
-</div>
-""", unsafe_allow_html=True)
+top_col1, top_col2 = st.columns([3.85, 1.15], vertical_alignment="center")
+
+with top_col1:
+    st.markdown(f"""
+    <div class="topbar">
+        <div class="brand">🔥 <span>BOILER AI</span> / CONTROL & DIAGNOSTICS</div>
+        <div>{connection} &nbsp; | &nbsp; {clock}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with top_col2:
+    cur_theme = st.session_state.get("theme_mode", "dark")
+    mode_selection = st.segmented_control(
+        "Theme Mode",
+        options=["🌙 Dark", "☀️ Light"],
+        default="🌙 Dark" if cur_theme == "dark" else "☀️ Light",
+        key="topbar_theme_toggle",
+        label_visibility="collapsed"
+    )
+    if mode_selection:
+        chosen = "light" if "Light" in mode_selection else "dark"
+        if chosen != st.session_state.get("theme_mode", "dark"):
+            st.session_state.theme_mode = chosen
+            st.rerun()
 
 st.markdown(f"""
 <div class="hero">
@@ -1706,29 +2186,44 @@ st.markdown('<div class="section-title">📈 REAL-TIME PROCESS TRENDS</div>', un
 if len(df) >= 2:
     x = pd.to_datetime(df["Time"])
     g1, g2 = st.columns(2)
+    is_dark = (st.session_state.get("theme_mode", "dark") == "dark")
 
     with g1:
-        fig, ax = plt.subplots()
-        ax.plot(x, df["PT100 (°C)"], label="PT100")
-        ax.axhline(TEMP_NORMAL_MAX, linestyle="--", label="Normal upper limit")
-        ax.axhline(TEMP_HIGH, linestyle="--", label="Fault limit")
-        ax.set_title("Boiler Temperature")
-        ax.set_ylabel("°C")
-        ax.grid(True)
-        ax.legend()
+        fig, ax = plt.subplots(facecolor='#040e18' if is_dark else '#ffffff')
+        ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
+        ax.plot(x, df["PT100 (°C)"], label="PT100", color='#45e7ff' if is_dark else '#0284c7', linewidth=2)
+        ax.axhline(TEMP_NORMAL_MAX, linestyle="--", label="Normal limit", color='#ffd66b' if is_dark else '#d97706')
+        ax.axhline(TEMP_HIGH, linestyle="--", label="Fault limit", color='#ff5555' if is_dark else '#dc2626')
+        ax.set_title("Boiler Temperature", color='#eaf8ff' if is_dark else '#082138', fontweight='bold')
+        ax.set_ylabel("°C", color='#8faabb' if is_dark else '#486581')
+        ax.tick_params(colors='#8faabb' if is_dark else '#486581')
+        ax.grid(True, color='#1e3a5f' if is_dark else '#cbd5e1', linestyle='--', alpha=0.6)
+        for spine in ax.spines.values():
+            spine.set_color('#1e3a5f' if is_dark else '#cbd5e1')
+        leg = ax.legend(facecolor='#06111b' if is_dark else '#ffffff', edgecolor='#1e3a5f' if is_dark else '#cbd5e1')
+        for text in leg.get_texts():
+            text.set_color('#eaf8ff' if is_dark else '#082138')
         plt.xticks(rotation=30)
         st.pyplot(fig)
+        plt.close(fig)
 
     with g2:
-        fig, ax = plt.subplots()
-        ax.plot(x, df["Flow (L/min)"], label="YF-S201")
-        ax.axhline(FLOW_LOW, linestyle="--", label="Low-flow limit")
-        ax.set_title("Water Flow")
-        ax.set_ylabel("L/min")
-        ax.grid(True)
-        ax.legend()
+        fig, ax = plt.subplots(facecolor='#040e18' if is_dark else '#ffffff')
+        ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
+        ax.plot(x, df["Flow (L/min)"], label="YF-S201", color='#63ffc0' if is_dark else '#059669', linewidth=2)
+        ax.axhline(FLOW_LOW, linestyle="--", label="Low-flow limit", color='#ff5555' if is_dark else '#dc2626')
+        ax.set_title("Water Flow", color='#eaf8ff' if is_dark else '#082138', fontweight='bold')
+        ax.set_ylabel("L/min", color='#8faabb' if is_dark else '#486581')
+        ax.tick_params(colors='#8faabb' if is_dark else '#486581')
+        ax.grid(True, color='#1e3a5f' if is_dark else '#cbd5e1', linestyle='--', alpha=0.6)
+        for spine in ax.spines.values():
+            spine.set_color('#1e3a5f' if is_dark else '#cbd5e1')
+        leg = ax.legend(facecolor='#06111b' if is_dark else '#ffffff', edgecolor='#1e3a5f' if is_dark else '#cbd5e1')
+        for text in leg.get_texts():
+            text.set_color('#eaf8ff' if is_dark else '#082138')
         plt.xticks(rotation=30)
         st.pyplot(fig)
+        plt.close(fig)
 else:
     st.info("Collecting live sensor history...")
 
