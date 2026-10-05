@@ -1286,31 +1286,10 @@ div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
 st.markdown(get_theme_css(st.session_state.theme_mode), unsafe_allow_html=True)
 
 # ============================================================
-# BOOT SCREEN
+# BOOT SCREEN / INITIALIZATION
 # ============================================================
-if not st.session_state.boot_done:
-    st.markdown("""
-<div style="height:72vh;display:flex;align-items:center;justify-content:center;text-align:center;">
-<div>
-<div style="font-size:76px;filter:drop-shadow(0 0 25px rgba(255,90,20,.7));animation:pulse 1.5s infinite;">🔥</div>
-<div style="font-family:Orbitron,sans-serif;font-size:38px;font-weight:800;margin-top:18px;">
-AI-BASED <span style="color:#45e7ff;">BOILER</span><br>PREDICTIVE FAULT DETECTION
-</div>
-<div style="color:#7f9aaa;margin-top:12px;letter-spacing:2px;">
-SENSOR FUSION • THERMAL IMAGING • INTELLIGENT MONITORING
-</div>
-<div style="color:#63ffc0;margin-top:28px;font-weight:700;letter-spacing:2px;">
-● SYSTEM INITIALIZATION...
-</div>
-<div style="color:#718b9b;margin-top:18px;font-size:13px;">
-MENTOR: N INDHU &nbsp; | &nbsp; RUJITH RS • SANJUSRINITHA T • RHOGETHRAM S T
-</div>
-</div>
-</div>
-""", unsafe_allow_html=True)
-    time.sleep(3)
-    st.session_state.boot_done = True
-    st.rerun()
+st.session_state.boot_done = True
+
 
 # ============================================================
 # SIDEBAR CONTROLS
