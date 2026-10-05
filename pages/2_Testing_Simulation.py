@@ -258,12 +258,31 @@ h1,h2,h3,h4 {
 
 .param:last-child {border-bottom:none;}
 
-.param-name {color:#7894a5;font-size:12px;}
+.param-name {color:#7894a5;font-size:12px;font-weight:600;}
 .param-value {
     font-family:'Orbitron',sans-serif;
     font-size:25px;
     font-weight:700;
     color:#edfaff;
+}
+
+.param-val-sub {
+    color:#eafaff;
+    font-size:13px;
+    font-weight:500;
+}
+
+.param-val-coord {
+    color:#45e7ff;
+    font-family:'Orbitron',sans-serif;
+    font-size:16px;
+    font-weight:700;
+}
+
+.subtext {
+    color:#8faabb;
+    font-size:14px;
+    line-height:1.6;
 }
 
 .range-box {
@@ -320,6 +339,21 @@ h1,h2,h3,h4 {
     font-size: 13.5px;
 }
 
+.fusion-item {
+    border-bottom: 1px solid rgba(120, 170, 190, 0.12);
+    color: #eaf8ff;
+}
+
+.fusion-item span {
+    color: #7894a5;
+    font-size: 13px;
+}
+
+.fusion-item b {
+    color: #edfaff;
+    font-weight: 700;
+}
+
 .footer {
     text-align:center;
     color:#587284;
@@ -354,6 +388,47 @@ div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
     color: #45e7ff !important;
     border: 1px solid rgba(69, 231, 255, 0.6) !important;
     box-shadow: 0 0 15px rgba(69, 231, 255, 0.35) !important;
+}
+
+/* Download Buttons (DARK) */
+div[data-testid="stDownloadButton"] > button {
+    background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
+    border: 1.5px solid rgba(69, 231, 255, 0.45) !important;
+    color: #f0fbff !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+    transition: all 0.2s ease !important;
+}
+
+div[data-testid="stDownloadButton"] > button:hover {
+    border-color: #45e7ff !important;
+    background: linear-gradient(135deg, #0d314d 0%, #071c2d 100%) !important;
+    box-shadow: 0 0 22px rgba(69, 231, 255, 0.5) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Expander in Dark Mode */
+div[data-testid="stExpander"] {
+    background: rgba(4, 14, 24, 0.95) !important;
+    border: 1px solid rgba(75, 220, 255, 0.22) !important;
+    border-radius: 12px !important;
+}
+
+div[data-testid="stExpander"] details summary {
+    background: rgba(8, 23, 37, 0.95) !important;
+    color: #eaf8ff !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+}
+
+/* Dataframe in Dark Mode */
+[data-testid="stDataFrame"] {
+    background: #06111b !important;
+    border: 1px solid rgba(75, 220, 255, 0.22) !important;
+    border-radius: 10px !important;
 }
 
 /* Boiler Graphic (DARK) */
@@ -674,15 +749,17 @@ h1,h2,h3,h4 {
 .hero-title span {color:#0284c7 !important; text-shadow:none !important;}
 
 .hero-sub {
-    color:#475569 !important;
+    color:#334155 !important;
     margin-top:8px;
     font-size:16px;
+    font-weight:500;
 }
 
 .team-line {
     margin-top:14px;
-    color:#64748b !important;
+    color:#475569 !important;
     font-size:13px;
+    font-weight:500;
 }
 
 .section-title {
@@ -729,6 +806,26 @@ h1,h2,h3,h4 {
     font-size:25px;
     font-weight:800;
     color:#0f172a !important;
+}
+
+.param-val-sub {
+    color:#0369a1 !important;
+    font-size:13.5px;
+    font-weight:600 !important;
+}
+
+.param-val-coord {
+    color:#0284c7 !important;
+    font-family:'Orbitron',sans-serif !important;
+    font-size:16px;
+    font-weight:700 !important;
+}
+
+.subtext {
+    color:#334155 !important;
+    font-size:14px;
+    line-height:1.6;
+    font-weight:500;
 }
 
 .range-box {
@@ -798,6 +895,7 @@ h1,h2,h3,h4 {
 
 .fusion-item span {
     color: #475569 !important;
+    font-size: 13px;
     font-weight: 600 !important;
 }
 
@@ -832,6 +930,27 @@ div.stButton > button:focus {
     background: #e0f2fe !important;
     color: #0284c7 !important;
     border-color: #0284c7 !important;
+}
+
+/* Download Buttons (LIGHT) */
+div[data-testid="stDownloadButton"] > button {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.35) !important;
+    color: #0284c7 !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+    transition: all 0.2s ease !important;
+}
+
+div[data-testid="stDownloadButton"] > button:hover {
+    background: #e0f2fe !important;
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.2) !important;
+    transform: translateY(-2px) !important;
 }
 
 /* Sliders in Light Mode */
@@ -895,7 +1014,7 @@ div[data-testid="stFileUploader"] button:hover {
 
 div[data-testid="stFileUploader"] small,
 div[data-testid="stFileUploader"] span {
-    color: #64748b !important;
+    color: #475569 !important;
 }
 
 /* Alerts and Expanders */
@@ -916,13 +1035,23 @@ div[data-testid="stExpander"] {
     border-radius: 12px !important;
 }
 
-div[data-testid="stExpander"] * {
+div[data-testid="stExpander"] details summary {
+    background: #f0f7fe !important;
     color: #0f172a !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+}
+
+/* Dataframe in Light Mode */
+[data-testid="stDataFrame"] {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.22) !important;
+    border-radius: 10px !important;
 }
 
 /* Captions and Paragraphs */
 .stCaption, p, span, label {
-    color: #475569 !important;
+    color: #334155 !important;
 }
 
 /* Theme Switcher Styling (LIGHT) */
@@ -936,7 +1065,7 @@ div[data-testid="stSegmentedControl"] {
 
 div[data-testid="stSegmentedControl"] button {
     border-radius: 9px !important;
-    color: #64748b !important;
+    color: #475569 !important;
     font-family: 'Orbitron', sans-serif !important;
     font-weight: 700 !important;
     font-size: 12px !important;
@@ -1107,7 +1236,7 @@ div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
 
 .footer {
     text-align:center;
-    color:#64748b;
+    color:#475569;
     margin-top:25px;
     padding-top:18px;
     border-top:1px solid rgba(2, 132, 199, 0.18);
@@ -1919,6 +2048,12 @@ st.session_state.test_history = st.session_state.test_history[-1000:]
 # ============================================================
 # MAIN PROCESS VISUALIZATION (IDENTICAL DIGITAL TWIN TO PAGE 1)
 # ============================================================
+is_dark = (st.session_state.get("theme_mode", "dark") == "dark")
+c_norm = "#55ffc0" if is_dark else "#059669"
+c_warn = "#ffd66b" if is_dark else "#d97706"
+c_crit = "#ff5555" if is_dark else "#dc2626"
+status_color = c_crit if severity == "CRITICAL" else (c_warn if severity == "WARNING" else c_norm)
+
 st.markdown('<div class="section-title">LIVE PROCESS OVERVIEW (SIMULATED DIGITAL TWIN)</div>', unsafe_allow_html=True)
 
 left, middle, right = st.columns([1.0, 1.55, 1.0])
@@ -1929,21 +2064,20 @@ with left:
 <div class="panel-head">SIMULATED INPUTS</div>
 <div class="param">
 <div class="param-name">YF-S201 FLOW</div>
-<div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">L/min</span></div>
+<div class="param-value">%.2f <span style="font-size:13px;font-weight:600;">L/min</span></div>
 </div>
 <div class="param">
 <div class="param-name">PT100 TEMPERATURE</div>
-<div class="param-value">%.2f <span style="font-size:13px;color:#7795a5;">°C</span></div>
+<div class="param-value">%.2f <span style="font-size:13px;font-weight:600;">°C</span></div>
 </div>
 <div class="param">
 <div class="param-name">TOTAL WATER</div>
-<div class="param-value">%.3f <span style="font-size:13px;color:#7795a5;">L</span></div>
+<div class="param-value">%.3f <span style="font-size:13px;font-weight:600;">L</span></div>
 </div>
 </div>
 """ % (sim_flow, sim_temp, sim_total), unsafe_allow_html=True)
 
 with middle:
-    # Dynamically adjust water height and heater flame based on simulated values
     water_height_pct = min(85, max(15, int((sim_total / 5.0) * 57))) if sim_total is not None else 57
     heater_glow_color = "#ff2200" if sim_temp >= TEMP_HIGH else ("#ff6d1b" if sim_temp >= TEMP_NORMAL_MAX else "#ff9933")
     heater_glow_shadow = f"0 0 25px {heater_glow_color}, 0 0 55px {heater_glow_color}"
@@ -1970,18 +2104,17 @@ with middle:
 """, unsafe_allow_html=True)
 
 with right:
-    # Dynamic Health Index calculation
     if severity == "CRITICAL":
         health_text = "24%"
-        health_color = "#ff5555"
+        health_color = c_crit
         health_deg = 24
     elif severity == "WARNING":
         health_text = "68%"
-        health_color = "#ffd66b"
+        health_color = c_warn
         health_deg = 68
     else:
         health_text = "96%"
-        health_color = "#55ffc0"
+        health_color = c_norm
         health_deg = 96
 
     health_message = "NORMAL" if severity == "NORMAL" else severity
@@ -1989,11 +2122,11 @@ with right:
     st.markdown(f"""
 <div class="panel health">
 <div class="panel-head">AI HEALTH INDEX</div>
-<div class="health-circle" style="background:conic-gradient({health_color} 0 {health_deg}%, #122632 {health_deg}% 100%);">
+<div class="health-circle" style="background:conic-gradient({health_color} 0 {health_deg}%, {'#122632' if is_dark else '#e2e8f0'} {health_deg}% 100%);">
     <div class="health-inner">{health_text}</div>
 </div>
 <div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:{health_color};">{health_message}</div>
-<div style="color:#7894a5;margin-top:7px;font-size:13px;">Sensor-fusion assessment</div>
+<div class="subtext" style="margin-top:7px;font-size:13px;">Sensor-fusion assessment</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -2012,9 +2145,9 @@ with t1:
         else "NORMAL"
     )
     temp_color = (
-        "#ff5555" if temp_state in ("LOW", "CRITICAL")
-        else "#ffd66b" if temp_state == "HIGH"
-        else "#63ffc0"
+        c_crit if temp_state in ("LOW", "CRITICAL")
+        else c_warn if temp_state == "HIGH"
+        else c_norm
     )
     st.markdown(f"""
 <div class="panel">
@@ -2031,7 +2164,7 @@ with t2:
         else "HIGH" if sim_flow > FLOW_NORMAL_MAX
         else "NORMAL"
     )
-    flow_color = "#ff7777" if flow_state == "LOW" else "#63ffc0"
+    flow_color = c_crit if flow_state == "LOW" else (c_warn if flow_state == "HIGH" else c_norm)
     st.markdown(f"""
 <div class="panel">
 <div class="panel-head">💧 FLOW</div>
@@ -2047,7 +2180,7 @@ with t3:
         else "HIGH" if sim_total > 5.00
         else "NORMAL"
     )
-    water_color = "#ff5555" if water_state != "NORMAL" else "#63ffc0"
+    water_color = c_crit if water_state != "NORMAL" else c_norm
     st.markdown(f"""
 <div class="panel">
 <div class="panel-head">💧 TOTAL WATER</div>
@@ -2069,7 +2202,7 @@ with f1:
 <div class="panel">
 <div class="panel-head">FLOW CHANNEL</div>
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>YF-S201</span><b style="color:{'#63ffc0' if flow_state == 'NORMAL' else '#ff7777'};">{flow_state}</b>
+<span>YF-S201</span><b style="color:{flow_color};">{flow_state}</b>
 </div>
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
 <span>Threshold</span><b>{FLOW_LOW:.2f} L/min</b>
@@ -2082,7 +2215,7 @@ with f2:
 <div class="panel">
 <div class="panel-head">TEMPERATURE CHANNEL</div>
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>PT100</span><b style="color:{'#ff5555' if temp_state in ('LOW', 'CRITICAL') else '#ffd66b' if temp_state == 'HIGH' else '#63ffc0'};">{sim_temp:.2f} °C • {temp_state}</b>
+<span>PT100</span><b style="color:{temp_color};">{sim_temp:.2f} °C • {temp_state}</b>
 </div>
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
 <span>Limit</span><b>{TEMP_HIGH:.0f} °C</b>
@@ -2091,11 +2224,12 @@ with f2:
 """, unsafe_allow_html=True)
 
 with f3:
+    thermal_badge_color = c_norm if thermal_tmax is not None else c_warn
     st.markdown(f"""
 <div class="panel">
 <div class="panel-head">THERMAL CHANNEL • TESTO 872 BMT</div>
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:9px 0;">
-<span>Testo 872</span><b style="color:{'#63ffc0' if thermal_tmax is not None else '#ffd66b'};">
+<span>Testo 872</span><b style="color:{thermal_badge_color};">
 {'BMT LOADED' if thermal_tmax is not None else 'WAITING'}
 </b>
 </div>
@@ -2140,7 +2274,7 @@ with bu2:
 <div class="panel">
 <div class="panel-head">RADIOMETRIC RESULTS</div>
 <div class="param"><div class="param-name">FILE</div>
-<div style="color:#eafaff;font-size:13px;">{st.session_state.test_bmt_name}</div></div>
+<div class="param-val-sub">{st.session_state.test_bmt_name}</div></div>
 <div class="param"><div class="param-name">TMAX</div>
 <div class="param-value">{bmt_stats["tmax"]:.2f} °C</div></div>
 <div class="param"><div class="param-name">TMIN</div>
@@ -2148,72 +2282,81 @@ with bu2:
 <div class="param"><div class="param-name">AVERAGE</div>
 <div class="param-value">{bmt_stats["tavg"]:.2f} °C</div></div>
 <div class="param"><div class="param-name">HOTSPOT PIXEL</div>
-<div style="color:#eafaff;font-size:16px;">X={bmt_stats["hot_x"]}, Y={bmt_stats["hot_y"]}</div></div>
+<div class="param-val-coord">X={bmt_stats["hot_x"]}, Y={bmt_stats["hot_y"]}</div></div>
+</div>
+""", unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+<div class="panel">
+<div class="panel-head">RADIOMETRIC RESULTS</div>
+<div class="subtext" style="padding: 24px 0;">
+    Upload a Testo 872 BMT file on the left to extract raw radiometric IR matrix evaluation in the simulation.
+</div>
 </div>
 """, unsafe_allow_html=True)
 
-        st.markdown('<div class="section-title">📷 REAL IMAGE + 🌡️ THERMAL IMAGE</div>', unsafe_allow_html=True)
-        img1, img2 = st.columns(2)
+# DUAL IMAGE DISPLAY (FULL WIDTH SIDE-BY-SIDE)
+if st.session_state.test_bmt is not None and bmt_stats:
+    st.markdown('<div class="section-title">📷 REAL IMAGE + 🌡️ THERMAL IMAGE</div>', unsafe_allow_html=True)
+    img1, img2 = st.columns(2)
 
-        with img1:
-            st.markdown('<div class="panel"><div class="panel-head">REAL IMAGE (EMBEDDED VISUAL JPEG)</div>', unsafe_allow_html=True)
-            vis = st.session_state.test_bmt.get("visual_jpeg")
-            if vis:
-                try:
-                    img = Image.open(io.BytesIO(vis))
-                    st.image(img, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Failed to display visual JPEG: {e}")
-            else:
-                st.info("No embedded visual image in this BMT.")
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        with img2:
-            st.markdown('<div class="panel"><div class="panel-head">RADIOMETRIC THERMAL MATRIX HEATMAP</div>', unsafe_allow_html=True)
+    with img1:
+        st.markdown('<div class="panel"><div class="panel-head">REAL IMAGE (EMBEDDED VISUAL JPEG)</div>', unsafe_allow_html=True)
+        vis = st.session_state.test_bmt.get("visual_jpeg")
+        if vis:
             try:
-                matrix = st.session_state.test_bmt["temperature_matrix"]
-                fig, ax = plt.subplots(figsize=(7, 4.5))
-                fig.patch.set_facecolor('#040e18')
-                ax.set_facecolor('#040e18')
-                im = ax.imshow(matrix, cmap="inferno", aspect="auto")
-                ax.plot(
-                    bmt_stats["hot_x"],
-                    bmt_stats["hot_y"],
-                    marker="x",
-                    color="#00ffff",
-                    markersize=12,
-                    markeredgewidth=2
-                )
-                ax.text(
-                    bmt_stats["hot_x"] + 5,
-                    bmt_stats["hot_y"] + 5,
-                    f"Tmax {bmt_stats['tmax']:.1f}°C",
-                    fontsize=9,
-                    color="#ffffff"
-                )
-                cbar = fig.colorbar(im, ax=ax)
-                cbar.set_label("Temperature (°C)", color="#89a8b8")
-                cbar.ax.yaxis.set_tick_params(color="#89a8b8")
-                plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color="#89a8b8")
-                fig.tight_layout()
-                st.pyplot(fig, use_container_width=True)
-                plt.close(fig)
+                img = Image.open(io.BytesIO(vis))
+                st.image(img, use_container_width=True)
             except Exception as e:
-                st.error(f"Thermal image rendering failed: {e}")
-            st.markdown("</div>", unsafe_allow_html=True)
+                st.error(f"Failed to display visual JPEG: {e}")
+        else:
+            st.info("No embedded visual image in this BMT.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        # Download CSV
-        matrix = st.session_state.test_bmt["temperature_matrix"]
-        csv_buf = io.StringIO()
-        np.savetxt(csv_buf, matrix, delimiter=",", fmt="%.3f")
-        st.download_button(
-            "⬇️ Download Radiometric Matrix (CSV)",
-            data=csv_buf.getvalue().encode("utf-8"),
-            file_name="testo_872_sim_matrix.csv",
-            mime="text/csv"
-        )
-    else:
-        st.info("Upload a Testo 872 BMT file to include raw radiometric IR matrix evaluation in the simulation.")
+    with img2:
+        st.markdown('<div class="panel"><div class="panel-head">RADIOMETRIC THERMAL MATRIX HEATMAP</div>', unsafe_allow_html=True)
+        try:
+            matrix = st.session_state.test_bmt["temperature_matrix"]
+            fig, ax = plt.subplots(figsize=(7, 4.5), facecolor='#040e18' if is_dark else '#ffffff')
+            ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
+            im = ax.imshow(matrix, cmap="inferno", aspect="auto")
+            ax.plot(
+                bmt_stats["hot_x"],
+                bmt_stats["hot_y"],
+                marker="x",
+                color="#00ffff" if is_dark else "#dc2626",
+                markersize=12,
+                markeredgewidth=2
+            )
+            ax.text(
+                bmt_stats["hot_x"] + 5,
+                bmt_stats["hot_y"] + 5,
+                f"Tmax {bmt_stats['tmax']:.1f}°C",
+                fontsize=9,
+                color="#ffffff" if is_dark else "#082138",
+                fontweight="bold"
+            )
+            cbar = fig.colorbar(im, ax=ax)
+            cbar.set_label("Temperature (°C)", color='#8faabb' if is_dark else '#486581')
+            cbar.ax.yaxis.set_tick_params(color='#8faabb' if is_dark else '#486581')
+            plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='#8faabb' if is_dark else '#486581')
+            fig.tight_layout()
+            st.pyplot(fig, use_container_width=True)
+            plt.close(fig)
+        except Exception as e:
+            st.error(f"Thermal image rendering failed: {e}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Download CSV
+    matrix = st.session_state.test_bmt["temperature_matrix"]
+    csv_buf = io.StringIO()
+    np.savetxt(csv_buf, matrix, delimiter=",", fmt="%.3f")
+    st.download_button(
+        "⬇️ Download Radiometric Matrix (CSV)",
+        data=csv_buf.getvalue().encode("utf-8"),
+        file_name="testo_872_sim_matrix.csv",
+        mime="text/csv"
+    )
 
 # ============================================================
 # FAULT ANALYSIS / CONCLUSION (IDENTICAL TO PAGE 1)
@@ -2225,11 +2368,11 @@ with a1:
     st.markdown(f"""
 <div class="panel">
 <div class="panel-head">WHAT PROBLEM IS DETECTED?</div>
-<div style="font-size:25px;font-weight:800;margin:8px 0 12px;color:{'#ff5555' if severity == 'CRITICAL' else ('#ffd66b' if severity == 'WARNING' else '#63ffc0')};">{status}</div>
-<div style="color:#b8cbd5;font-size:14px;line-height:1.65;">{diagnosis}</div>
+<div style="font-size:25px;font-weight:800;margin:8px 0 12px;color:{status_color};">{status}</div>
+<div class="subtext" style="line-height:1.65;">{diagnosis}</div>
 <div class="action-box">
-    <b style="color:#45e7ff;">Recommended Action:</b><br>
-    <span style="color:#eaf8ff;font-size:13.5px;">{action}</span>
+    <b>Recommended Action:</b><br>
+    <span>{action}</span>
 </div>
 </div>
 """, unsafe_allow_html=True)
@@ -2243,10 +2386,10 @@ with a2:
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>YF-S201 Flow</span><b>{sim_flow:.2f} L/min</b></div>
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water</span><b>{sim_total:.3f} L</b></div>
 <div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Testo 872 Tmax</span><b>{thermal_str}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Temperature State</span><b>{temp_state}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Flow State</span><b>{flow_state}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water State</span><b>{water_state}</b></div>
-<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Fusion Decision</span><b style="color:{'#ff5555' if severity == 'CRITICAL' else ('#ffd66b' if severity == 'WARNING' else '#63ffc0')};">{severity}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Temperature State</span><b style="color:{temp_color};">{temp_state}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Flow State</span><b style="color:{flow_color};">{flow_state}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Total Water State</span><b style="color:{water_color};">{water_state}</b></div>
+<div class="fusion-item" style="display:flex;justify-content:space-between;padding:8px 0;"><span>Fusion Decision</span><b style="color:{status_color};">{severity}</b></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -2272,10 +2415,9 @@ if len(df_hist) >= 2:
     x = pd.to_datetime(df_hist["Time"])
     g1, g2 = st.columns(2)
 
-    is_dark = (st.session_state.get("theme_mode", "dark") == "dark")
     with g1:
         fig, ax = plt.subplots(figsize=(6, 3.5), facecolor='#040e18' if is_dark else '#ffffff')
-        ax.set_facecolor('#040e18' if is_dark else '#f8fafc')
+        ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
         ax.plot(x, df_hist["PT100 (°C)"], color="#ff7b26" if is_dark else "#d97706", linewidth=2, label="PT100")
         ax.axhline(TEMP_NORMAL_MAX, color="#ffd166" if is_dark else "#b45309", linestyle="--", label="Normal limit")
         ax.axhline(TEMP_HIGH, color="#ff6868" if is_dark else "#dc2626", linestyle="--", label="Fault limit")
@@ -2293,7 +2435,7 @@ if len(df_hist) >= 2:
 
     with g2:
         fig, ax = plt.subplots(figsize=(6, 3.5), facecolor='#040e18' if is_dark else '#ffffff')
-        ax.set_facecolor('#040e18' if is_dark else '#f8fafc')
+        ax.set_facecolor('#02060c' if is_dark else '#f8fafc')
         ax.plot(x, df_hist["Flow (L/min)"], color="#46e7ff" if is_dark else "#0284c7", linewidth=2, label="YF-S201")
         ax.axhline(FLOW_LOW, color="#ff6868" if is_dark else "#dc2626", linestyle="--", label="Low-flow limit")
         ax.set_title("Simulated Water Flow", color="#9eefff" if is_dark else "#082138", fontweight='bold')
