@@ -1721,21 +1721,15 @@ def warning_beep_html():
 #   field2 = temperature (°C)
 #   field3 = totalLiters (L)
 # ============================================================
-def get_data():
-    """Fetch latest sensor values from ThingSpeak."""
-    cid  = TS_CHANNEL_ID.strip()
-    rkey = TS_READ_API_KEY.strip()
-
-    if not cid or not rkey:
-        # Credentials not yet configured
-        return 0.0, 0.0, 0.0, False
-
+@st.cache_data(ttl=3, show_spinner=False)
+def fetch_thingspeak_cached(cid: str, rkey: str):
+    """Fetch latest sensor values from ThingSpeak with short cache."""
     try:
         url = (
             f"https://api.thingspeak.com/channels/{cid}/feeds/last.json"
             f"?api_key={rkey}"
         )
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=3)
         response.raise_for_status()
         d = response.json()
         if not isinstance(d, dict):
@@ -1746,6 +1740,17 @@ def get_data():
         return flow_val, temp_val, total_val, True
     except Exception:
         return 0.0, 0.0, 0.0, False
+
+def get_data():
+    """Fetch latest sensor values from ThingSpeak."""
+    cid  = TS_CHANNEL_ID.strip()
+    rkey = TS_READ_API_KEY.strip()
+
+    if not cid or not rkey:
+        return 0.0, 0.0, 0.0, False
+
+    return fetch_thingspeak_cached(cid, rkey)
+
 
 
 # ============================================================
@@ -2007,7 +2012,7 @@ def get_parameter_states(f, t, total_water):
     return temp_state, flow_state, water_state
 
 
-@st.fragment(run_every=2 if auto_refresh else None)
+@st.fragment(run_every=3 if auto_refresh else None)
 def render_live_monitoring():
     flow, temp, total, connected = get_data()
     is_dark = (st.session_state.get("theme_mode", "dark") == "dark")
