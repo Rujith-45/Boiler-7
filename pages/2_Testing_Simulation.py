@@ -42,6 +42,12 @@ if "sim_flow" not in st.session_state:
     st.session_state.sim_flow = 1.50
 if "sim_total" not in st.session_state:
     st.session_state.sim_total = 2.00
+if "sl_temp" not in st.session_state:
+    st.session_state.sl_temp = float(st.session_state.sim_temp)
+if "sl_flow" not in st.session_state:
+    st.session_state.sl_flow = float(st.session_state.sim_flow)
+if "sl_total" not in st.session_state:
+    st.session_state.sl_total = float(st.session_state.sim_total)
 if "test_history" not in st.session_state:
     st.session_state.test_history = []
 if "test_bmt" not in st.session_state:
@@ -408,6 +414,33 @@ div[data-testid="stDownloadButton"] > button:hover {
     background: linear-gradient(135deg, #0d314d 0%, #071c2d 100%) !important;
     box-shadow: 0 0 22px rgba(69, 231, 255, 0.5) !important;
     transform: translateY(-2px) !important;
+}
+
+/* Action / Preset Buttons in Dark Mode */
+div.stButton > button {
+    background: linear-gradient(135deg, #092032 0%, #04121d 100%) !important;
+    border: 1.5px solid rgba(69, 231, 255, 0.45) !important;
+    color: #f0fbff !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+    transition: all 0.2s ease !important;
+}
+
+div.stButton > button:hover {
+    border-color: #45e7ff !important;
+    background: linear-gradient(135deg, #0d314d 0%, #071c2d 100%) !important;
+    box-shadow: 0 0 22px rgba(69, 231, 255, 0.5) !important;
+    transform: translateY(-2px) !important;
+}
+
+div.stButton > button:active,
+div.stButton > button:focus {
+    background: linear-gradient(135deg, #0d314d 0%, #071c2d 100%) !important;
+    color: #45e7ff !important;
+    border-color: #45e7ff !important;
 }
 
 /* Expander in Dark Mode */
@@ -1971,47 +2004,61 @@ st.markdown('<div class="section-title">🎛️ FAULT INJECTION & MANUAL SENSOR 
 
 st.caption("⚡ Quick Test Presets: Click any preset button to immediately simulate that condition across the entire digital twin.")
 
+def apply_preset(flow, temp, total):
+    st.session_state.sim_flow = float(flow)
+    st.session_state.sim_temp = float(temp)
+    st.session_state.sim_total = float(total)
+    st.session_state.sl_flow = float(flow)
+    st.session_state.sl_temp = float(temp)
+    st.session_state.sl_total = float(total)
+
+def update_from_sliders():
+    st.session_state.sim_flow = float(st.session_state.sl_flow)
+    st.session_state.sim_temp = float(st.session_state.sl_temp)
+    st.session_state.sim_total = float(st.session_state.sl_total)
+
 p1, p2, p3, p4, p5 = st.columns(5)
 with p1:
-    if st.button("🟢 NORMAL OPERATION", use_container_width=True):
-        st.session_state.sim_temp = 60.0
-        st.session_state.sim_flow = 1.50
-        st.session_state.sim_total = 2.00
-        st.rerun()
+    st.button("🟢 NORMAL OPERATION", on_click=apply_preset, args=(1.50, 60.0, 2.00), use_container_width=True, key="btn_preset_normal")
 with p2:
-    if st.button("🟡 LOW INLET FLOW", use_container_width=True):
-        st.session_state.sim_temp = 60.0
-        st.session_state.sim_flow = 0.15
-        st.session_state.sim_total = 2.00
-        st.rerun()
+    st.button("🟡 LOW INLET FLOW", on_click=apply_preset, args=(0.15, 60.0, 2.00), use_container_width=True, key="btn_preset_low_flow")
 with p3:
-    if st.button("🔴 OVERHEATING", use_container_width=True):
-        st.session_state.sim_temp = 90.0
-        st.session_state.sim_flow = 1.50
-        st.session_state.sim_total = 2.00
-        st.rerun()
+    st.button("🔴 HIGH TEMP / OVERHEAT", on_click=apply_preset, args=(1.50, 90.0, 2.00), use_container_width=True, key="btn_preset_high_temp")
 with p4:
-    if st.button("🚨 DRY-RUN HAZARD", use_container_width=True):
-        st.session_state.sim_temp = 92.0
-        st.session_state.sim_flow = 0.10
-        st.session_state.sim_total = 0.20
-        st.rerun()
+    st.button("🚨 DRY-RUN HAZARD", on_click=apply_preset, args=(0.10, 92.0, 0.20), use_container_width=True, key="btn_preset_dry_run")
 with p5:
-    if st.button("⚠️ SUPPLY FAILURE", use_container_width=True):
-        st.session_state.sim_temp = 25.0
-        st.session_state.sim_flow = 0.10
-        st.session_state.sim_total = 0.15
-        st.rerun()
+    st.button("⚠️ SUPPLY FAILURE", on_click=apply_preset, args=(0.10, 25.0, 0.15), use_container_width=True, key="btn_preset_supply_fail")
 
 sl1, sl2, sl3 = st.columns(3)
 with sl1:
-    sim_flow = st.slider("💧 YF-S201 Flow Rate (L/min)", 0.00, 20.00, float(st.session_state.sim_flow), 0.05, key="sl_flow")
+    sim_flow = st.slider(
+        "💧 YF-S201 Flow Rate (L/min)",
+        0.00, 20.00,
+        value=float(st.session_state.sim_flow),
+        step=0.05,
+        key="sl_flow",
+        on_change=update_from_sliders
+    )
     st.session_state.sim_flow = sim_flow
 with sl2:
-    sim_temp = st.slider("🌡️ PT100 Temperature (°C)", 0.0, 150.0, float(st.session_state.sim_temp), 0.5, key="sl_temp")
+    sim_temp = st.slider(
+        "🌡️ PT100 Temperature (°C)",
+        0.0, 150.0,
+        value=float(st.session_state.sim_temp),
+        step=0.5,
+        key="sl_temp",
+        on_change=update_from_sliders
+    )
     st.session_state.sim_temp = sim_temp
 with sl3:
-    sim_total = st.slider("💧 Cumulative Total Water (L)", 0.00, 20.00, float(st.session_state.sim_total), 0.05, key="sl_total")
+    sim_total = st.slider(
+        "💧 Cumulative Total Water (L)",
+        0.00, 20.00,
+        value=float(st.session_state.sim_total),
+        step=0.05,
+        key="sl_total",
+        on_change=update_from_sliders
+    )
     st.session_state.sim_total = sim_total
 
 # Optional Testo 872 BMT upload

@@ -146,7 +146,10 @@
       <div class="subtitle">Wasm SCADA Engine Initializing (Pyodide & Streamlit)...</div>
       <div class="status-pill">
         <span class="pulse-dot"></span>
-        <span id="status-text">Booting WebAssembly Python Runtime...</span>
+        <span id="status-text">Booting WebAssembly Python Engine (first load takes ~15-20s)...</span>
+      </div>
+      <div style="margin-top: 14px; font-size: 0.78rem; color: #64748b; text-align: center; max-width: 360px; line-height: 1.4;">
+        ⚡ Loading Pyodide, NumPy, Pandas & Matplotlib into browser memory. Subsequent visits will load instantly from cache.
       </div>
     </div>
 
@@ -156,6 +159,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@stlite/browser@0.74.0/build/stlite.js"></script>
     <script>
       const statusText = document.getElementById("status-text");
+
+      const stages = [
+        { t: 1500, msg: "Downloading Pyodide WebAssembly runtime..." },
+        { t: 4500, msg: "Installing NumPy, Pandas & Matplotlib..." },
+        { t: 9000, msg: "Compiling Thermal Imaging & SCADA modules..." },
+        { t: 14000, msg: "Mounting Dashboard UI & Sensor Fusion Engine..." }
+      ];
+
+      stages.forEach(stage => {
+        setTimeout(() => {
+          if (statusText && document.getElementById("loading-screen").style.display !== "none") {
+            statusText.innerText = stage.msg;
+          }
+        }, stage.t);
+      });
 
       const bmtFiles = [
         "IR000132.BMT", "IR000133.BMT", "IR000134.BMT", "IR000135.BMT",
@@ -189,7 +207,6 @@
             "pillow"
           ],
           entrypoint: "dashboard.py",
-          files: filesConfig,
           streamlitConfig: {
             "server.headless": true,
             "theme.base": "dark",
@@ -197,7 +214,8 @@
             "theme.backgroundColor": "#0b0f19",
             "theme.secondaryBackgroundColor": "#111827",
             "theme.textColor": "#f8fafc"
-          }
+          },
+          files: filesConfig
         },
         document.getElementById("root")
       ).then(() => {
@@ -210,7 +228,7 @@
         }
       }).catch(err => {
         if (statusText) {
-          statusText.innerText = "Error initializing engine: " + err.message;
+          statusText.innerText = "Initialization Error: " + err.message;
           statusText.style.color = "#ef4444";
         }
         console.error("Stlite Mount Error:", err);
