@@ -42,16 +42,15 @@ The application will be accessible at `http://localhost:8501`.
 
 ## ☁️ Deployment Guide
 
-### Deploying to Streamlit Community Cloud (Recommended & Free)
-Streamlit apps rely on persistent WebSockets and long-running Python execution. The recommended platform to host this application is **Streamlit Community Cloud**:
-1. Go to [share.streamlit.io](https://share.streamlit.io) and log in with your GitHub account.
-2. Click **"New app"**.
-3. Select your repository: `Rujith-45/Boiler-7`.
-4. Set the main file path to: `dashboard.py`.
-5. Click **"Deploy!"**. Your application will be live in minutes with full WebSocket and live re-rendering support.
+### Live on GitHub Pages (Serverless & Free)
+This application runs natively in web browsers on GitHub Pages using **stlite** (Streamlit compiled with WebAssembly/Pyodide). No backend server is required!
 
-### Note on Vercel
-Vercel is designed for serverless, stateless architectures (Node.js/Next.js/stateless REST APIs) with short execution timeouts and does not support the persistent WebSockets required by standard Streamlit server sessions. For hosting Streamlit online, Streamlit Community Cloud, Render, Railway, or Hugging Face Spaces are recommended.
+1. Go to your repository on GitHub: `https://github.com/Rujith-45/Boiler-7`
+2. Navigate to **Settings** ➔ **Pages**
+3. Under **Build and deployment**:
+   - **Source**: Select **GitHub Actions** (recommended) or **Deploy from a branch** (`main` / `/root`)
+4. Once deployed, your live application will be available at:
+   `https://rujith-45.github.io/Boiler-7/`
 
 ---
 

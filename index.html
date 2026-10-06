@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>AI Boiler Predictive Fault Detection - SCADA HMI</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+    
+    <!-- Stlite CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.74.0/build/stlite.css"
+    />
+    
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0b0f19;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #e2e8f0;
+        overflow: hidden;
+      }
+
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #111827 0%, #080b11 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.6s ease-out, visibility 0.6s;
+      }
+
+      .spinner-container {
+        position: relative;
+        width: 90px;
+        height: 90px;
+        margin-bottom: 24px;
+      }
+
+      .spinner-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 4px solid transparent;
+        border-top-color: #38bdf8;
+        animation: spin 1.2s cubic-bezier(0.55, 0.25, 0.25, 0.95) infinite;
+      }
+
+      .spinner-ring:nth-child(2) {
+        width: 70%;
+        height: 70%;
+        top: 15%;
+        left: 15%;
+        border-top-color: #f97316;
+        animation: spin-reverse 0.9s linear infinite;
+      }
+
+      .spinner-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 28px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes spin-reverse {
+        0% { transform: rotate(360deg); }
+        100% { transform: rotate(0deg); }
+      }
+
+      .title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: #f8fafc;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      .subtitle {
+        font-size: 0.95rem;
+        color: #94a3b8;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        border-radius: 9999px;
+        color: #38bdf8;
+        font-size: 0.82rem;
+        font-family: monospace;
+      }
+
+      .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #38bdf8;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.85); }
+      }
+
+      #root {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading-screen">
+      <div class="spinner-container">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-icon">🔥</div>
+      </div>
+      <div class="title">AI BOILER PREDICTIVE FAULT DETECTION</div>
+      <div class="subtitle">Wasm SCADA Engine Initializing (Pyodide & Streamlit)...</div>
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        <span id="status-text">Booting WebAssembly Python Runtime...</span>
+      </div>
+    </div>
+
+    <div id="root"></div>
+
+    <!-- Stlite JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/browser@0.74.0/build/stlite.js"></script>
+    <script>
+      const statusText = document.getElementById("status-text");
+
+      const bmtFiles = [
+        "IR000132.BMT", "IR000133.BMT", "IR000134.BMT", "IR000135.BMT",
+        "IR000136.BMT", "IR000137.BMT", "IR000138.BMT", "IR000139.BMT",
+        "SR000132.BMT", "SR000133.BMT", "SR000134.BMT", "SR000135.BMT",
+        "SR000136.BMT", "SR000137.BMT", "SR000138.BMT", "SR000139.BMT"
+      ];
+
+      const filesConfig = {
+        "dashboard.py": {
+          url: "./dashboard.py"
+        },
+        "pages/2_Testing_Simulation.py": {
+          url: "./pages/2_Testing_Simulation.py"
+        }
+      };
+
+      bmtFiles.forEach(file => {
+        filesConfig["images/" + file] = {
+          url: "./images/" + file
+        };
+      });
+
+      stlite.mount(
+        {
+          requirements: [
+            "requests",
+            "pandas",
+            "matplotlib",
+            "numpy",
+            "pillow"
+          ],
+          entrypoint: "dashboard.py",
+          files: filesConfig,
+          streamlitConfig: {
+            "server.headless": true,
+            "theme.base": "dark",
+            "theme.primaryColor": "#f97316",
+            "theme.backgroundColor": "#0b0f19",
+            "theme.secondaryBackgroundColor": "#111827",
+            "theme.textColor": "#f8fafc"
+          }
+        },
+        document.getElementById("root")
+      ).then(() => {
+        const loadingScreen = document.getElementById("loading-screen");
+        if (loadingScreen) {
+          loadingScreen.style.opacity = "0";
+          setTimeout(() => {
+            loadingScreen.style.display = "none";
+          }, 600);
+        }
+      }).catch(err => {
+        if (statusText) {
+          statusText.innerText = "Error initializing engine: " + err.message;
+          statusText.style.color = "#ef4444";
+        }
+        console.error("Stlite Mount Error:", err);
+      });
+    </script>
+  </body>
+</html>
